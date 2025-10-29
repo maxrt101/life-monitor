@@ -1,0 +1,22 @@
+{
+    "cmakeMinimumRequired": {
+        "patch": 0,
+        "major": 3,
+        "minor": 16
+    },
+    "configurePresets": [
+        {
+            "name": "LifeMonitor Debug",
+            "displayName": "LifeMonitor - Debug",
+            "description": "LifeMonitor on STM32L051",
+            "cacheVariables": {
+                "BOARD": "stm32l051",
+                "CMAKE_BUILD_TYPE": "DEBUG"
+            },
+            "binaryDir": "${sourceDir}/cmake-build-stm32l051-debug",
+            "generator": "Unix Makefiles"
+        }
+    ],
+    "buildPresets": [],
+    "version": 3
+}

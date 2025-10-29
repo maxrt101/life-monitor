@@ -1,0 +1,29 @@
+void OnProjectLoad (void) {
+  Project.SetDevice("STM32L051K8");
+  Project.SetHostIF("USB", "822003928");
+  Project.SetTargetIF("SWD");
+  Project.SetTIFSpeed("4 MHz");
+  Project.AddSvdFile("$(InstallDir)/Config/CPU/Cortex-M0.svd");
+
+  File.Open("$(ProjectDir)/cmake-build-stm32l051-debug/LifeMonitor.elf");
+}
+
+void _SetupTarget(void) {
+  unsigned int SP;
+  unsigned int PC;
+  unsigned int VectorTableAddr;
+
+  VectorTableAddr = Elf.GetBaseAddr();
+
+  SP = Target.ReadU32(VectorTableAddr);
+  if (SP != 0xFFFFFFFF) {
+    Target.SetReg("SP", SP);
+  }
+
+  PC = Target.ReadU32(VectorTableAddr + 4);
+  if (PC != 0xFFFFFFFF) {
+    Target.SetReg("PC", PC);
+  } else {
+    Util.Error("Project script error: failed to set up entry point PC", 1);
+  }
+}

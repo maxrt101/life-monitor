@@ -1,0 +1,13 @@
+
+*.o
+*.obj
+*.a
+*.so
+*.elf
+*.out
+
+cmake-*
+
+.idea
+
+.DS_Store
