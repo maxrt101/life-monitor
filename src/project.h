@@ -12,11 +12,9 @@ extern "C" {
 #endif
 
 /* Includes ================================================================= */
-#include "led/led.h"
-#include "btn/btn.h"
 #include "shell/shell.h"
-#include "hal/spi/spi.h"
 #include "drv/trx/trx.h"
+#include "bsp.h"
 
 /* Defines ================================================================== */
 /* Macros =================================================================== */
@@ -26,13 +24,8 @@ extern "C" {
  * Device context
  */
 typedef struct {
-  /** TRX SPI Handle */
-  spi_t trx_spi;
-
-  led_t leds[BSP_LED_COUNT];
-
-  /** Buttons */
-  btn_t btns[BSP_BTN_COUNT];
+  /** Board context. Peripherals, etc. */
+  board_t board;
 
   /** TRX Driver Handle */
   trx_t trx;

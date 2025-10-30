@@ -77,17 +77,9 @@ error_t tty_process_ansi_csi_custom(tty_t * tty, tty_line_t * line, char c) {
 #endif
 
 __STATIC_INLINE void init_radio(void) {
-  // Initialize LoRa SPI
-  spi_cfg_t lora_spi_cfg = {
-    .spi_no = RA02_SPI_INDEX,
-    .cs     = GPIO_TO_TYPE(BSP_LORA_CS)
-  };
-
-  ERR_CHECK(spi_init(&device.trx_spi, &lora_spi_cfg));
-
   // Initialize LoRa
   trx_cfg_t trx_cfg = {
-    .ra02.spi = &device.trx_spi,
+    .ra02.spi = &device.board.trx_spi,
     .ra02.reset = GPIO_TO_TYPE(BSP_LORA_RESET)
   };
 
@@ -119,7 +111,7 @@ OS_CREATE_TASK(cli, 1024, cli_task_fn, NULL);
 /* Shared functions ========================================================= */
 void project_main(void) {
   // Initialize BSP
-  bsp_init();
+  bsp_init(&device.board);
 
   // Initialize root vfs
   vfs_init(&vfs, &vfs_node_pool, &vfs_table_pool);
