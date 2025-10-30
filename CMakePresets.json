@@ -6,9 +6,9 @@
     },
     "configurePresets": [
         {
-            "name": "LifeMonitor Debug",
-            "displayName": "LifeMonitor - Debug",
-            "description": "LifeMonitor on STM32L051",
+            "name": "LifeMonitor STM32L051 Debug",
+            "displayName": "LifeMonitor on STM32L051 - Debug",
+            "description": "LifeMonitor on STM32L051 in Debug Build",
             "cacheVariables": {
                 "BOARD": "stm32l051",
                 "CMAKE_BUILD_TYPE": "DEBUG"
