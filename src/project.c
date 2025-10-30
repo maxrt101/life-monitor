@@ -69,6 +69,13 @@ void trx_on_waiting(__UNUSED trx_t * trx) {
 #endif
 }
 
+#if USE_SHELL_HISTORY
+error_t tty_process_ansi_csi_custom(tty_t * tty, tty_line_t * line, char c) {
+  // Call shell history handler to parse UP/DOWN arrow keys
+  return shell_history_process_ansi_csi(tty, line, c);
+}
+#endif
+
 __STATIC_INLINE void init_radio(void) {
   // Initialize LoRa SPI
   spi_cfg_t lora_spi_cfg = {
