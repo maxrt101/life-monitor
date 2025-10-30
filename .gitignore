@@ -6,6 +6,8 @@
 *.elf
 *.out
 
+*.jdebug.user
+
 cmake-*
 
 .idea
