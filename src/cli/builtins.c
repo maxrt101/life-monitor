@@ -13,7 +13,7 @@
 #include "shell/shell_builtins.h"
 
 /* Defines ================================================================== */
-#define LOG_TAG SHELL
+#define LOG_TAG shell
 
 /* Macros =================================================================== */
 /* Exposed macros =========================================================== */
@@ -25,6 +25,7 @@ SHELL_DECLARE_COMMAND(echo, builtin_echo, "Echoes arguments");
 SHELL_DECLARE_COMMAND(exec, builtin_exec, "Execute subcommand");
 SHELL_DECLARE_COMMAND(exit, builtin_exit, "Exit from shell");
 SHELL_DECLARE_COMMAND(help, builtin_help, "Shows all commands");
+SHELL_DECLARE_COMMAND(history, builtin_history, "Show history");
 SHELL_DECLARE_COMMAND(if, builtin_if, "Conditional execution");
 SHELL_DECLARE_COMMAND(log, builtin_log, "Log");
 SHELL_DECLARE_COMMAND(mem, builtin_mem, "Memory usage and reading");
