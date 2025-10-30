@@ -36,6 +36,10 @@ error_t spi_init(spi_t * spi, spi_cfg_t * cfg) {
       spi->handle = SPI1;
       MX_SPI1_Init();
       break;
+    case 2:
+      spi->handle = SPI2;
+      MX_SPI2_Init();
+      break;
     default:
       return E_INVAL;
   }

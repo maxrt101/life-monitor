@@ -8,6 +8,7 @@
 
 /* Includes ================================================================= */
 #include "bsp.h"
+#include "main.h"
 #include "project.h"
 #include "error/assertion.h"
 #include "queue/queue.h"
@@ -41,7 +42,7 @@ static os_heap_t heap;
 error_t console_init(vfs_t * vfs);
 
 /* Shared functions ========================================================= */
-void bsp_init(void) {
+void bsp_init(board_t * board) {
   HAL_MspInit();
 
   // Initialize OS Heap
@@ -49,7 +50,7 @@ void bsp_init(void) {
   os_use_heap(&heap);
 
   led_init(
-    &device.leds[0],
+    &board->leds[0],
     GPIO_TYPE_BIND(LED_GREEN),
     GPIO_POL_POSITIVE,
     &led_green_queue
@@ -61,7 +62,16 @@ void bsp_init(void) {
   cfg.press_time = 1000;
 
   // Initialize BTN instance
-  btn_init(&device.btns[0], &cfg);
+  btn_init(&board->btns[0], &cfg);
+
+  // Initialize SX1278 SPI
+  spi_init(&board->trx_spi, &(spi_cfg_t) { .spi_no = 1, .cs = GPIO_TO_TYPE(BSP_LORA_CS) });
+
+  // Initialize unused SPI
+  spi_init(&board->free_spi, &(spi_cfg_t) { .spi_no = 2, .cs = GPIO_TO_TYPE(GPIO_BIND(SPI2_CS)) });
+
+  // Initialize I2C
+  i2c_init(&board->i2c, &(i2c_cfg_t){ .i2c_no = 1 });
 
   // Initialize RTC
   LL_RTC_DisableWriteProtection(RTC);

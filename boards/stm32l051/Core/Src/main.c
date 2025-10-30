@@ -97,7 +97,9 @@ int main(void)
   MX_SPI1_Init();
   MX_RTC_Init();
   MX_ADC_Init();
+  MX_USART2_UART_Init();
   MX_LPUART1_UART_Init();
+  MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
   project_main();
   /* USER CODE END 2 */

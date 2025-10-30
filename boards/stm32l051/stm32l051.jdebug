@@ -1,11 +1,11 @@
 void OnProjectLoad (void) {
   Project.SetDevice("STM32L051K8");
-  Project.SetHostIF("USB", "822003928");
   Project.SetTargetIF("SWD");
   Project.SetTIFSpeed("4 MHz");
   Project.AddSvdFile("$(InstallDir)/Config/CPU/Cortex-M0.svd");
+  Project.AddSvdFile("STM32L0x1.svd");
 
-  File.Open("$(ProjectDir)/cmake-build-stm32l051-debug/LifeMonitor.elf");
+  File.Open("../../cmake-build-stm32l051-debug/LifeMonitor.elf");
 }
 
 void _SetupTarget(void) {

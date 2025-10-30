@@ -50,13 +50,8 @@ project_add_define(
     "BSP_I2C_RECV_TIMEOUT=100"
     "BSP_SPI_RECV_TIMEOUT=100"
 
-    # LoRa
-    "RA02_SPI_INDEX=1"
-    "HAS_TRX_RA02_SUPPORT=1"
-    "TRX_ASYNC_TIMEOUT_MS=500"
-
-    # AHT10
-    "AHT10_I2C_INDEX=1"
+    # SX1278
+    "HAS_TRX_SX1278_SUPPORT=1"
 
     # Power
     "BAT_VOLTAGE_SCALER=3"

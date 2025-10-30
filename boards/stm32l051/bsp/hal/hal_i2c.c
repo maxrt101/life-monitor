@@ -57,7 +57,7 @@ error_t i2c_send(i2c_t * i2c, uint16_t addr, uint8_t * data, size_t size) {
   I2C_HandleTypeDef * handle = i2c->handle;
 
   STM32_HAL_ERROR_CHECK_RETURN(
-    HAL_I2C_Master_Transmit(handle, addr, data, size, BSP_I2C_RECV_TIMEOUT)
+    HAL_I2C_Master_Transmit(handle, addr << 1, data, size, BSP_I2C_RECV_TIMEOUT)
   );
 
   return E_OK;
@@ -69,7 +69,7 @@ error_t i2c_recv(i2c_t * i2c, uint16_t addr, uint8_t * data, size_t size) {
   I2C_HandleTypeDef * handle = i2c->handle;
 
   STM32_HAL_ERROR_CHECK_RETURN(
-    HAL_I2C_Master_Receive(handle, addr, data, size, BSP_I2C_RECV_TIMEOUT)
+    HAL_I2C_Master_Receive(handle, addr << 1, data, size, BSP_I2C_RECV_TIMEOUT)
   );
 
   return E_OK;

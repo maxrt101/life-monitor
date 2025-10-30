@@ -34,8 +34,6 @@ extern "C" {
 
 extern UART_HandleTypeDef hlpuart1;
 
-extern UART_HandleTypeDef huart2;
-
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

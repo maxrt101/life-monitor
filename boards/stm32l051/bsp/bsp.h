@@ -13,11 +13,11 @@ extern "C" {
 
 /* Includes ================================================================= */
 #include "main.h"
+#include "vfs/vfs.h"
 #include "led/led.h"
 #include "btn/btn.h"
-#include "hal/onewire/onewire.h"
-#include "vfs/vfs.h"
-#include <stdbool.h>
+#include "i2c/i2c.h"
+#include "spi/spi.h"
 
 /* Defines ================================================================== */
 /* RA-02 GPIO Defines */
@@ -31,12 +31,34 @@ extern "C" {
 /* Macros =================================================================== */
 /* Enums ==================================================================== */
 /* Types ==================================================================== */
+/**
+ * Peripherals
+ */
+typedef struct {
+  /** SPI Handle for SX1278 */
+  spi_t trx_spi;
+
+  /** Unused SPI Handle */
+  spi_t free_spi;
+
+  /** I2C Handle */
+  i2c_t i2c;
+
+  /** Handles for all LEDs present */
+  led_t leds[BSP_LED_COUNT];
+
+  /** Handles for all buttons present */
+  btn_t btns[BSP_BTN_COUNT];
+} board_t;
+
 /* Variables ================================================================ */
 /* Shared functions ========================================================= */
 /**
  * Initialize board
+ *
+ * @param board Board context
  */
-void bsp_init(void);
+void bsp_init(board_t * board);
 
 /**
  * Initialize VFS files
