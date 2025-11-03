@@ -13,3 +13,5 @@ cmake-*
 .idea
 
 .DS_Store
+
+*.log
