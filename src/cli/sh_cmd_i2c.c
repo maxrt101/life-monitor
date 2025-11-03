@@ -9,12 +9,9 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include <project.h>
-
 #include "shell/shell.h"
 #include "log/log.h"
-#include "bsp.h"
-#include <string.h>
+#include "project.h"
 
 /* Defines ================================================================== */
 #define LOG_TAG shell
