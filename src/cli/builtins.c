@@ -21,6 +21,7 @@
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 SHELL_DECLARE_COMMAND(abort, builtin_abort, "Aborts app");
+SHELL_DECLARE_COMMAND(clear, builtin_clear, "Clear screen");
 SHELL_DECLARE_COMMAND(echo, builtin_echo, "Echoes arguments");
 SHELL_DECLARE_COMMAND(exec, builtin_exec, "Execute subcommand");
 SHELL_DECLARE_COMMAND(exit, builtin_exit, "Exit from shell");
