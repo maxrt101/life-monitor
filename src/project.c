@@ -106,7 +106,7 @@ void cli_task_fn(__UNUSED void * ctx) {
   }
 }
 
-OS_CREATE_TASK(cli, 1024, cli_task_fn, NULL);
+OS_CREATE_TASK(cli, 2048, cli_task_fn, NULL);
 
 /* Shared functions ========================================================= */
 void project_main(void) {
