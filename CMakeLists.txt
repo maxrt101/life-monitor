@@ -29,7 +29,6 @@ set(SHOW_SIZE       1)
 set(FEATURES
     # Device Defaults
     "PROJECT_DEFAULT_DEVICE_ID=0xEBAC0C"
-    "PROJECT_DEFAULT_DEVICE_KEY=0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F"
 
     # Application
     "USE_WDG=0"
@@ -65,14 +64,16 @@ set(FEATURES
     "LOG_ENABLE_heap=1"
     "LOG_ENABLE_swdg=1"
     "LOG_ENABLE_swdt=1"
-    "LOG_ENABLE_sx1278=1"
-    "LOG_ENABLE_ds28=1"
-    "LOG_ENABLE_aht=1"
+    "LOG_ENABLE_sx1278=0"
+    "LOG_ENABLE_ds28=0"
+    "LOG_ENABLE_aht=0"
+    "LOG_ENABLE_max3010x=1"
     "LOG_ENABLE_nvm_crc=0"
     "LOG_ENABLE_hal_nvm=0"
     "LOG_ENABLE_hal_spi=0"
     "LOG_ENABLE_hal_uart=0"
     "LOG_ENABLE_hal_wdt=0"
+    "LOG_ENABLE_pulse=1"
 
     # Debug Log Configuration
     "SHELL_DEBUG_PRINT_TOKENS=0"
@@ -111,6 +112,7 @@ project_add_src_files(
 project_add_src_recursive(
         "${SDK_DIR}/hal"
         "${SDK_DIR}/lib"
+        "${SDK_DIR}/drv/max3010x"
         "${SDK_DIR}/drv/trx/sx1278"
 )
 
