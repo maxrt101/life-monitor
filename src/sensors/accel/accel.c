@@ -16,31 +16,28 @@
 #define LOG_TAG accel
 
 /* Macros =================================================================== */
-#define ABS_DIFF(__a, __b) ((__a) > (__b) ? (__a) - (__b) : (__b) - (__a))
+#define ABS_DIFF(__a, __b) \
+  ((__a) > (__b) ? (__a) - (__b) : (__b) - (__a))
 
 /* Exposed macros =========================================================== */
 /* Enums ==================================================================== */
 /* Types ==================================================================== */
 /* Variables ================================================================ */
 /* Private functions ======================================================== */
-static int16_t weighted_moving_average(acceleration_wma_t * wma, int16_t value) {
+static int16_t simple_moving_average(acceleration_sma_t * wma, int16_t value) {
   wma->buffer[wma->index] = value;
-  wma->index = ++wma->index % ACCELERATION_WMA_BUFFER_SIZE;
+  wma->index = ++wma->index % ACCELERATION_SMA_BUFFER_SIZE;
 
-  int32_t avg = 0;
-  uint32_t wma_index = wma->index;
+  int32_t sum = 0;
+  uint32_t sma_index = wma->index;
 
-  for (uint32_t i = 0; i < ACCELERATION_WMA_BUFFER_SIZE; ++i) {
-    avg += wma->buffer[wma_index] * wma->weights[i];
-    // avg += wma->buffer[wma_index];
+  for (uint32_t i = 0; i < ACCELERATION_SMA_BUFFER_SIZE; ++i) {
+    sum += wma->buffer[sma_index];
 
-    wma_index = ++wma_index % ACCELERATION_WMA_BUFFER_SIZE;
+    sma_index = ++sma_index % ACCELERATION_SMA_BUFFER_SIZE;
   }
 
-  // avg /= wma->weights_sum;
-  avg /= ACCELERATION_WMA_BUFFER_SIZE;
-
-  return avg;
+  return sum /= ACCELERATION_SMA_BUFFER_SIZE;
 }
 
 /* Shared functions ========================================================= */
@@ -48,20 +45,6 @@ error_t acceleration_monitor_init(acceleration_monitor_t * am) {
   ASSERT_RETURN(am, E_NULL);
 
   memset(am, 0, sizeof(acceleration_monitor_t));
-
-  for (int16_t w = 0; w < ACCELERATION_WMA_BUFFER_SIZE; ++w) {
-    // int16_t index = ACCELERATION_WMA_BUFFER_SIZE - w - 1;
-    int16_t index = w;
-
-    am->x.weights[index] = w;
-    am->x.weights_sum += w;
-
-    am->y.weights[index] = w;
-    am->y.weights_sum += w;
-
-    am->z.weights[index] = w;
-    am->z.weights_sum += w;
-  }
 
   return E_OK;
 }
@@ -72,14 +55,16 @@ acceleration_process_result_t acceleration_monitor_process_sample(acceleration_m
   acceleration_process_result_t res = ACCELERATION_RESULT_IDLE;
 
   acceleration_pos_t avg = {
-    .x = weighted_moving_average(&am->x, sample->x),
-    .y = weighted_moving_average(&am->y, sample->y),
-    .z = weighted_moving_average(&am->z, sample->z),
+    .x = simple_moving_average(&am->x, sample->x),
+    .y = simple_moving_average(&am->y, sample->y),
+    .z = simple_moving_average(&am->z, sample->z),
   };
 
+#if 1
   log_printf("accel {x=%d y=%d z=%d}; avg {x=%d y=%d z=%d}\r\n",
     sample->x, sample->y, sample->z, avg.x, avg.y, avg.z
   );
+#endif
 
   if (ABS_DIFF(sample->x, avg.x) > ACCELERATION_SUDDEN_MOVEMENT_THRESHOLD) {
     log_printf(ANSI_COLOR_FG_RED "X > THRESHOLD (%d %d)" ANSI_TEXT_RESET "\r\n", sample->x, avg.x);

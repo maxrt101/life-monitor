@@ -18,8 +18,8 @@ extern "C" {
 #include <stdint.h>
 
 /* Defines ================================================================== */
-/** Size of Weighed Moving Average Buffer */
-#define ACCELERATION_WMA_BUFFER_SIZE 16
+/** Size of Simple Moving Average Buffer */
+#define ACCELERATION_SMA_BUFFER_SIZE 16
 
 /**
  * Threshold that difference of avg & sample value has to cross to be
@@ -55,23 +55,20 @@ typedef struct {
 } acceleration_pos_t;
 
 /**
- * Weighed Moving Average Context
+ * Simple Moving Average Context
  */
 typedef struct {
-  int16_t  buffer[ACCELERATION_WMA_BUFFER_SIZE];
+  int16_t  buffer[ACCELERATION_SMA_BUFFER_SIZE];
   uint32_t index;
-
-  int16_t weights[ACCELERATION_WMA_BUFFER_SIZE];
-  int16_t weights_sum;
-} acceleration_wma_t;
+} acceleration_sma_t;
 
 /**
  * Acceleration Monitor Context
  */
 typedef struct {
-  acceleration_wma_t x;
-  acceleration_wma_t y;
-  acceleration_wma_t z;
+  acceleration_sma_t x;
+  acceleration_sma_t y;
+  acceleration_sma_t z;
 } acceleration_monitor_t;
 
 /* Variables ================================================================ */
