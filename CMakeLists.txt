@@ -112,6 +112,7 @@ project_add_src_files(
 project_add_src_recursive(
         "${SDK_DIR}/hal"
         "${SDK_DIR}/lib"
+        "${SDK_DIR}/drv/mpu6050"
         "${SDK_DIR}/drv/max3010x"
         "${SDK_DIR}/drv/trx/sx1278"
 )
