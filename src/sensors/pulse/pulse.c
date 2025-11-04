@@ -7,7 +7,7 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include "pulse/pulse.h"
+#include "sensors/pulse/pulse.h"
 #include "error/assertion.h"
 #include "log/log.h"
 #include "tty/ansi.h"

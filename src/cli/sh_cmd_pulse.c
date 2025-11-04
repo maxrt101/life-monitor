@@ -12,7 +12,7 @@
 #include "drv/max3010x/max3010x.h"
 #include "shell/shell_util.h"
 #include "shell/shell.h"
-#include "pulse/pulse.h"
+#include "sensors/pulse/pulse.h"
 #include "tty/ansi.h"
 #include "log/log.h"
 #include "project.h"
