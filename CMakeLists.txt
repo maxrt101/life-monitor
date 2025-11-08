@@ -68,12 +68,14 @@ set(FEATURES
     "LOG_ENABLE_ds28=0"
     "LOG_ENABLE_aht=0"
     "LOG_ENABLE_max3010x=1"
+    "LOG_ENABLE_pulse=1"
+    "LOG_ENABLE_gps=1"
     "LOG_ENABLE_nvm_crc=0"
     "LOG_ENABLE_hal_nvm=0"
     "LOG_ENABLE_hal_spi=0"
     "LOG_ENABLE_hal_uart=0"
     "LOG_ENABLE_hal_wdt=0"
-    "LOG_ENABLE_pulse=1"
+    "LOG_ENABLE_hal_1w=0"
 
     # Debug Log Configuration
     "SHELL_DEBUG_PRINT_TOKENS=0"
