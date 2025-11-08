@@ -60,6 +60,16 @@ void HardFault_Handler_Wrapped(uint32_t * regs) {
   for (size_t i = 0; i < UTIL_ARR_SIZE(registers); ++i) {
     log_fatal(ANSI_TEXT_BOLD "%-5s" ANSI_TEXT_RESET ANSI_COLOR_FG_MAGENTA "0x%08x" ANSI_TEXT_RESET, registers[i], regs[i]);
   }
+
+  log_fatal("Task: " ANSI_COLOR_FG_RED "%s" ANSI_TEXT_RESET, os_task_current()->name);
+
+  log_fatal(ANSI_TEXT_BOLD "MSP Stacktrace:" ANSI_TEXT_RESET);
+  bsp_print_stacktrace((uint32_t *)__get_MSP(), BSP_STACKTRACE_DEPTH);
+
+  log_fatal(ANSI_TEXT_BOLD "Task Stacktrace:" ANSI_TEXT_RESET);
+  bsp_print_stacktrace((uint32_t *)__get_PSP(), BSP_STACKTRACE_DEPTH);
+
+  os_reset(OS_RESET_WDG);
 }
 
 /**
@@ -96,11 +106,11 @@ void RTC_IRQHandler(void) {
     log_printf("RTC: %d\r\n", LL_RTC_WAKEUP_GetAutoReload(RTC) / 16);
 #endif
 
-    global_runtime += ((LL_RTC_WAKEUP_GetAutoReload(RTC) / 16) * 125) / 128;
-
-    if (runtime_get() < global_runtime) {
-      runtime_set(global_runtime);
-    }
+    // global_runtime += ((LL_RTC_WAKEUP_GetAutoReload(RTC) / 16) * 125) / 128;
+    //
+    // if (runtime_get() < global_runtime) {
+    //   runtime_set(global_runtime);
+    // }
 
     LL_RTC_ClearFlag_WUT(RTC);
     LL_PWR_ClearFlag_WU();
