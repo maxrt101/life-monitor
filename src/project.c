@@ -79,8 +79,8 @@ error_t tty_process_ansi_csi_custom(tty_t * tty, tty_line_t * line, char c) {
 __STATIC_INLINE void init_radio(void) {
   // Initialize LoRa
   trx_cfg_t trx_cfg = {
-    .ra02.spi = &device.board.trx_spi,
-    .ra02.reset = GPIO_TO_TYPE(BSP_LORA_RESET)
+    .sx1278.spi = &device.board.trx_spi,
+    .sx1278.reset = GPIO_TO_TYPE(BSP_LORA_RESET)
   };
 
   ERR_CHECK(trx_sx1278_init(&device.trx));
