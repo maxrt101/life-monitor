@@ -1,0 +1,83 @@
+name: Build LifeMonitor
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - '**.c'
+      - '**.h'
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - '**.c'
+      - '**.h'
+  workflow_dispatch:
+    inputs:
+      preset:
+        description: "Preset"
+        required: true
+        default: "LifeMonitor STM32L051 Debug"
+      features:
+        description: "Space-separated list of key-value feature toggles"
+        required: false
+
+env:
+  GCC_URL: "https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-x86_64-arm-none-eabi.tar.xz"
+  GCC_DIR: "gcc-arm"
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Init Submodules
+      run: git submodule update --init --recursive
+
+    - name: Setup CMake
+      uses: jwlawson/actions-setup-cmake@v2
+      with:
+        cmake-version: '3.28.x'
+
+    - name: Setup Compiler
+      run: |
+        wget -nv ${{env.GCC_URL}}
+        mkdir ./${{env.GCC_DIR}}
+        tar -xf $(basename ${{env.GCC_URL}}) -C ./${{env.GCC_DIR}} --strip-components=1
+
+    - name: Configure
+      run: |
+        declare -a ARGS=()
+
+        if [ -n "${{ inputs.features }}" ]; then
+          for feature in ${{ inputs.features }}
+          do
+            ARGS+=("-D$feature")
+          done
+        fi
+        export PATH="$PATH:$(pwd)/${{env.GCC_DIR}}/bin"
+        cmake -B build -S . -G "Unix Makefiles" --preset "${{ env.PRESET }}" "${ARGS[@]}"
+      env:
+        PRESET: ${{ inputs.preset == '' && 'LifeMonitor STM32L051 Debug' || inputs.preset }}
+
+    - name: Build
+      run: cmake --build build --target LifeMonitor
+
+    - name: Archive ELF artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: grain-section-elf
+        path: build/GrainSection.elf
+
+    - name: Archive HEX artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: grain-section-hex
+        path: build/GrainSection.hex
+
+    - name: Archive BIN artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: grain-section-bin
+        path: build/GrainSection.bin
