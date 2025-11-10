@@ -7,17 +7,18 @@
  *  ========================================================================= */
 
 /* Includes ================================================================= */
-#include "project.h"
-#include "bsp.h"
 #include "drv/trx/trx.h"
-#include "log/log.h"
-#include "tty/ansi.h"
 #include "shell/shell.h"
+#include "tty/ansi.h"
+#include "log/log.h"
 #include "vfs/vfs.h"
 #include "os/reset/reset.h"
-#include "os/os.h"
 #include "os/power/power.h"
+#include "os/os.h"
 #include "wdt/wdt.h"
+#include "tasks/tasks.h"
+#include "project.h"
+#include "bsp.h"
 
 /* Defines ================================================================== */
 #define LOG_TAG main
@@ -58,6 +59,13 @@ VFS_DECLARE_NODE_POOL(vfs_node_pool, 8);
 /** VFS Table Pool */
 VFS_DECLARE_TABLE_POOL(vfs_table_pool, 8);
 
+OS_CREATE_TASK(app,   256,  app_task_fn, NULL);
+OS_CREATE_TASK(pulse, 256,  pulse_task_fn, NULL);
+OS_CREATE_TASK(accel, 256,  accel_task_fn, NULL);
+OS_CREATE_TASK(gps,   256,  gps_task_fn, NULL);
+OS_CREATE_TASK(cli,   1024, cli_task_fn, NULL);
+OS_CREATE_TASK(io,    128,  io_task_fn,  NULL);
+
 /* Private functions ======================================================== */
 void trx_on_waiting(__UNUSED trx_t * trx) {
 #if USE_TRX_YIELD_ON_WAIT
@@ -93,20 +101,60 @@ __STATIC_INLINE void init_radio(void) {
   ERR_CHECK(trx_set_bandwidth(&device.trx, 125000));
 }
 
-void cli_task_fn(__UNUSED void * ctx) {
-  shell_init(&device.shell, vfs_open(&vfs, CONSOLE_FILE), NULL);
+__STATIC_INLINE void init_pulse(void) {
+  ERR_CHECK(
+    max3010x_init(
+      &device.pulse.max3010x,
+      &(max3010x_cfg_t){
+        .i2c = &device.board.i2c,
+        .adc_range.max30102 = MAX30102_ADC_RANGE_2K_nA,
+        .pulse_width = {
+          .max30100 = MAX30100_PULSE_WIDTH_1600_ADC_16_BIT,
+          .max30102 = MAX30102_PULSE_WIDTH_118_ADC_16_BIT,
+        },
+        .sample_rate = {
+          .max30100 = MAX30100_SAMPLE_RATE_100_HZ,
+          .max30102 = MAX30102_SAMPLE_RATE_100_HZ,
+        },
+        .current = {
+          .ir  = 50,
+          .red = 50
+        },
+        .mode = MAX3010X_MODE_HEART_RATE
+      }
+    )
+  );
 
-  shell_start(&device.shell);
-
-  os_yield();
-
-  while (1) {
-    shell_process(&device.shell);
-    os_yield();
-  }
+  ERR_CHECK(
+    pulse_init(
+      &device.pulse.ctx,
+      max3010x_get_min_ir_adc_voltage(&device.pulse.max3010x),
+      500
+    )
+  );
 }
 
-OS_CREATE_TASK(cli, 2048, cli_task_fn, NULL);
+__STATIC_INLINE void init_pos(void) {
+  ERR_CHECK(
+    mpu6050_init(
+      &device.pos.mpu6050,
+      &(mpu6050_cfg_t) {
+        .i2c   = &device.board.i2c,
+        .gyro  = MPU6050_GYRO_FS_SEL_1000_DEG_PER_S,
+        .accel = MPU6050_ACCEL_AFS_SEL_16G,
+      }
+    )
+  );
+
+  ERR_CHECK(
+    acceleration_monitor_init(&device.pos.monitor)
+  );
+}
+
+__STATIC_INLINE void init_gps(void) {
+  ERR_CHECK(uart_init(&device.gps.uart, &(uart_cfg_t){ .uart_no = 2 }));
+  ERR_CHECK(uart_set_baudrate(device.gps.uart, 9600));
+}
 
 /* Shared functions ========================================================= */
 void project_main(void) {
@@ -146,9 +194,17 @@ void project_main(void) {
   log_info("Reset reason: %s", os_reset_reason_to_str(os_get_reset_reason()));
 
   init_radio();
+  init_pulse();
+  init_pos();
+  init_gps();
 
   log_info("Starting tasks");
 
+  os_task_start(OS_TASK(app));
+  os_task_start(OS_TASK(pulse));
+  os_task_start(OS_TASK(accel));
+  os_task_start(OS_TASK(gps));
+  os_task_start(OS_TASK(io));
   os_task_start(OS_TASK(cli));
 
   log_info("Starting OS");
