@@ -25,10 +25,6 @@
 /* Enums ==================================================================== */
 /* Types ==================================================================== */
 /* Variables ================================================================ */
-static struct {
-  uart_t * uart;
-} gps;
-
 /* Private functions ======================================================== */
 /* Shared functions ========================================================= */
 static int8_t cmd_gps(shell_t * sh, uint8_t argc, const char ** argv) {
@@ -49,8 +45,8 @@ static int8_t cmd_gps(shell_t * sh, uint8_t argc, const char ** argv) {
   }
 
 
-  SHELL_ERR_REPORT_RETURN(uart_init(&gps.uart, &(uart_cfg_t){ .uart_no = 2, }), "uart_init");
-  uart_set_baudrate(gps.uart, 9600);
+  SHELL_ERR_REPORT_RETURN(uart_init(&device.gps.uart, &(uart_cfg_t){ .uart_no = 2, }), "uart_init");
+  uart_set_baudrate(device.gps.uart, 9600);
 
   log_info("Sniffing NEO6M uart traffic. Press any key to stop...");
 
@@ -69,7 +65,7 @@ static int8_t cmd_gps(shell_t * sh, uint8_t argc, const char ** argv) {
     while (1) {
       uint8_t byte = 0;
 
-      uart_recv(gps.uart, &byte, 1, NULL);
+      uart_recv(device.gps.uart, &byte, 1, NULL);
 
       if (byte == '\r') { continue; }
       if (byte == '\n') { break; }

@@ -30,25 +30,6 @@
 
 /* Shared functions ========================================================= */
 static int8_t cmd_pos(shell_t * sh, uint8_t argc, const char ** argv) {
-  acceleration_monitor_t am;
-  mpu6050_t mpu6050;
-
-  log_info("Initializing MPU6050...");
-
-  SHELL_ERR_REPORT_RETURN(
-    mpu6050_init(
-      &mpu6050,
-      &(mpu6050_cfg_t) {
-        .i2c   = &device.board.i2c,
-        .gyro  = MPU6050_GYRO_FS_SEL_1000_DEG_PER_S,
-        .accel = MPU6050_ACCEL_AFS_SEL_16G,
-      }
-    ),
-    "mpu6050_init"
-  );
-
-  acceleration_monitor_init(&am);
-
   log_info("Will print samples. Press any key to stop");
 
   while (1) {
@@ -62,7 +43,7 @@ static int8_t cmd_pos(shell_t * sh, uint8_t argc, const char ** argv) {
 
     mpu6050_measurement_t data;
 
-    if (mpu6050_measure(&mpu6050, &data) == E_OK) {
+    if (mpu6050_measure(&device.pos.mpu6050, &data) == E_OK) {
       led_off(&device.board.leds[BSP_LED_MAIN]);
 
       // log_printf("accel {x=%d y=%d z=%d}; gyro {x=%d y=%d z=%d}\r\n",
@@ -72,16 +53,13 @@ static int8_t cmd_pos(shell_t * sh, uint8_t argc, const char ** argv) {
 
       acceleration_pos_t sample = { .x = data.accel.x, .y = data.accel.y, .z = data.accel.z };
 
-      if (acceleration_monitor_process_sample(&am, &sample) == ACCELERATION_RESULT_SUDDEN_MOVEMENT_DETECTED) {
+      if (acceleration_monitor_process_sample(&device.pos.monitor, &sample) == ACCELERATION_RESULT_SUDDEN_MOVEMENT_DETECTED) {
         led_on(&device.board.leds[BSP_LED_MAIN]);
       }
     }
 
     sleep_ms(200);
   }
-
-  SHELL_ERR_REPORT_RETURN(mpu6050_sleep(&mpu6050), "mpu6050_sleep");
-
 
   return SHELL_OK;
 }
