@@ -66,6 +66,11 @@ void bsp_init(board_t * board);
 error_t bsp_init_vfs_files(vfs_t * vfs);
 
 /**
+ * Returns true if button is pressed
+ */
+bool bsp_is_btn_pressed(void);
+
+/**
  * Sets period, which when expired will wake up the MCU
  */
 void bsp_set_next_wakeup(milliseconds_t period);

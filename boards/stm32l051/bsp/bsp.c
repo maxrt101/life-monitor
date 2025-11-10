@@ -92,6 +92,10 @@ error_t bsp_init_vfs_files(vfs_t * vfs) {
   return E_OK;
 }
 
+bool bsp_is_btn_pressed(void) {
+  return btn_was_pressed(&device.board.btns[BSP_BTN_MAIN]);
+}
+
 void bsp_set_next_wakeup(milliseconds_t period) {
   // RTC has 32768 ticks per second, 1ms = 32 ticks.
   // The RTC divider is 2, so 1ms = 16 ticks.
