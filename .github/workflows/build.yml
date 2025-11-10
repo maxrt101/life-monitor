@@ -68,16 +68,16 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: grain-section-elf
-        path: build/GrainSection.elf
+        path: build/LifeMonitor.elf
 
     - name: Archive HEX artifact
       uses: actions/upload-artifact@v4
       with:
         name: grain-section-hex
-        path: build/GrainSection.hex
+        path: build/LifeMonitor.hex
 
     - name: Archive BIN artifact
       uses: actions/upload-artifact@v4
       with:
         name: grain-section-bin
-        path: build/GrainSection.bin
+        path: build/LifeMonitor.bin
