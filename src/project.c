@@ -62,7 +62,7 @@ VFS_DECLARE_NODE_POOL(vfs_node_pool, 8);
 /** VFS Table Pool */
 VFS_DECLARE_TABLE_POOL(vfs_table_pool, 8);
 
-OS_CREATE_TASK(app,   512,  app_task_fn, NULL);
+OS_CREATE_TASK(app,   1024, app_task_fn, NULL);
 OS_CREATE_TASK(cli,   1024, cli_task_fn, NULL);
 OS_CREATE_TASK(io,    128,  io_task_fn,  NULL);
 
