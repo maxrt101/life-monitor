@@ -40,32 +40,14 @@ static int8_t cmd_pulse(shell_t * sh, uint8_t argc, const char ** argv) {
       break;
     }
 
-    max3010x_poll_irq_flags(&device.pulse.max3010x);
-
-    if (max3010x_process(&device.pulse.max3010x) == MAX3010X_STATUS_SAMPLES_READY) {
-      led_off(&device.board.leds[BSP_LED_MAIN]);
-
-      size_t size = SAMPLES_COUNT;
-
-      if (max3010x_read_samples(&device.pulse.max3010x, device.pulse.samples, &size) == E_OK) {
-        bool beat = false;
-
-        for (size_t i = 0; i < size; ++i) {
-          beat |= pulse_process_sample(&device.pulse.ctx, (int32_t) device.pulse.samples[i].ir) == E_OK;
-        }
-        pulse_report_bpm(&device.pulse.ctx);
-
-        if (beat) {
-          led_on(&device.board.leds[BSP_LED_MAIN]);
-        }
-      }
-    }
+    app_pulse_process(&device.app);
+    // pulse_report_bpm(&device.app.pulse.ctx);
   }
 
-  log_info("beats:    %u", device.pulse.ctx.total.beats);
-  log_info("time(ms): %u", device.pulse.ctx.total.time);
-  log_info("bpm(%d):  %u", PULSE_BEAT_APPROX_SAMPLES, device.pulse.ctx.approx.bpm);
-  log_info("bpm(abs): %u", PULSE_CALCULATE_BPM_TOTAL_AVG(device.pulse.ctx.total.beats, device.pulse.ctx.total.time));
+  log_info("beats:    %u", device.app.pulse.ctx.total.beats);
+  log_info("time(ms): %u", device.app.pulse.ctx.total.time);
+  log_info("bpm(%d):  %u", PULSE_BEAT_APPROX_SAMPLES, device.app.pulse.ctx.approx.bpm);
+  log_info("bpm(abs): %u", PULSE_CALCULATE_BPM_TOTAL_AVG(device.app.pulse.ctx.total.beats, device.app.pulse.ctx.total.time));
 
   return SHELL_OK;
 }

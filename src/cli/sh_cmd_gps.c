@@ -28,25 +28,25 @@
 /* Private functions ======================================================== */
 /* Shared functions ========================================================= */
 static int8_t cmd_gps(shell_t * sh, uint8_t argc, const char ** argv) {
-  if (argc > 1 && !strcmp(argv[1], "test")) {
-    gps_location_t location;
+  // if (argc > 1 && !strcmp(argv[1], "test")) {
+  //   gps_location_t location;
+  //
+  //   char buffer[128];
+  //
+  //   // const char * test = "$GPRMC,134800.00,A,4322.44684,N,01231.03213,E,1.314,,141022,,,A*72";
+  //   const char * test = "$GNRMC,060512.00,A,3150.788156,N,11711.922383,E,0.0,,311019,,,A,V*1B";
+  //   size_t test_size = strlen(test);
+  //
+  //   memcpy(buffer, test, test_size + 1);
+  //
+  //   log_printf("Test sentence: '%s'\r\n", buffer);
+  //   gps_parse(&location, buffer, test_size);
+  //   return SHELL_OK;
+  // }
 
-    char buffer[128];
 
-    // const char * test = "$GPRMC,134800.00,A,4322.44684,N,01231.03213,E,1.314,,141022,,,A*72";
-    const char * test = "$GNRMC,060512.00,A,3150.788156,N,11711.922383,E,0.0,,311019,,,A,V*1B";
-    size_t test_size = strlen(test);
-
-    memcpy(buffer, test, test_size + 1);
-
-    log_printf("Test sentence: '%s'\r\n", buffer);
-    gps_parse(&location, buffer, test_size);
-    return SHELL_OK;
-  }
-
-
-  SHELL_ERR_REPORT_RETURN(uart_init(&device.gps.uart, &(uart_cfg_t){ .uart_no = 2, }), "uart_init");
-  uart_set_baudrate(device.gps.uart, 9600);
+  // SHELL_ERR_REPORT_RETURN(uart_init(&device.gps.uart, &(uart_cfg_t){ .uart_no = 2, }), "uart_init");
+  // uart_set_baudrate(device.gps.uart, 9600);
 
   log_info("Sniffing NEO6M uart traffic. Press any key to stop...");
 
@@ -59,29 +59,16 @@ static int8_t cmd_gps(shell_t * sh, uint8_t argc, const char ** argv) {
       break;
     }
 
-    char nmea_sentence[128] = {0};
-    uint8_t index = 0;
+    if (app_gps_process(&device.app) == E_OK) {
+      log_printf("Latitude:  %c %s\r\n",
+        device.app.gps.last_location.latitude.direction,
+        device.app.gps.last_location.latitude.value
+      );
 
-    while (1) {
-      uint8_t byte = 0;
-
-      uart_recv(device.gps.uart, &byte, 1, NULL);
-
-      if (byte == '\r') { continue; }
-      if (byte == '\n') { break; }
-
-      nmea_sentence[index++] = byte;
-    }
-
-    nmea_sentence[index] = '\0';
-
-    log_printf("%s\r\n", nmea_sentence);
-
-    gps_location_t location;
-
-    if (gps_parse(&location, nmea_sentence, index) == E_OK) {
-      log_printf("Latitude:  %c %s\r\n", location.latitude.direction, location.latitude.value);
-      log_printf("Longitude: %c %s\r\n", location.longitude.direction, location.longitude.value);
+      log_printf("Longitude: %c %s\r\n",
+        device.app.gps.last_location.longitude.direction,
+        device.app.gps.last_location.longitude.value
+      );
     }
 
   }

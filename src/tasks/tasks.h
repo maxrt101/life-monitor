@@ -23,15 +23,6 @@ extern "C" {
 /** Declare app task handle */
 OS_DECLARE_TASK(app);
 
-/** Declare app task handle */
-OS_DECLARE_TASK(pulse);
-
-/** Declare app task handle */
-OS_DECLARE_TASK(accel);
-
-/** Declare app task handle */
-OS_DECLARE_TASK(gps);
-
 /** Declare io task handle */
 OS_DECLARE_TASK(io);
 
@@ -43,10 +34,6 @@ OS_DECLARE_TASK(cli);
  * Worker for Detector Task
  */
 void app_task_fn(void * ctx);
-
-void pulse_task_fn(void * ctx);
-void accel_task_fn(void * ctx);
-void gps_task_fn(void * ctx);
 
 /**
  * Worker for IO Task
