@@ -11,6 +11,7 @@
 /* Includes ================================================================= */
 #include "app/app.h"
 #include "error/assertion.h"
+#include "log/log.h"
 
 /* Defines ================================================================== */
 #define LOG_TAG app
@@ -213,7 +214,9 @@ error_t app_gps_process(app_t * app) {
   TIMEOUT_CREATE(t, 0);
 
   uint8_t byte = 0;
-  uart_recv(app->gps.uart, &byte, 1, &t);
+  if (uart_recv(app->gps.uart, &byte, 1, &t) != E_OK) {
+    return E_AGAIN;
+  }
 
   if (byte == '\r') {
     return E_AGAIN;
@@ -226,5 +229,16 @@ error_t app_gps_process(app_t * app) {
     return E_AGAIN;
   }
 
-  return gps_parse(&app->gps.last_location, app->gps.buffer, app->gps.index);
+#if 0
+  // log_printf("[%d]: %s\r\n", app->gps.index, app->gps.buffer);
+  for (uint8_t i = 0; i < app->gps.index; ++i) {
+    log_printf("  %d: %d '%c'\r\n", i, app->gps.buffer[i], app->gps.buffer[i]);
+  }
+#endif
+
+  error_t err = gps_parse(&app->gps.last_location, app->gps.buffer, app->gps.index);;
+
+  app->gps.index = 0;
+
+  return err;
 }
