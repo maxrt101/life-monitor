@@ -17,10 +17,9 @@
 #include "os/os.h"
 #include "wdt/wdt.h"
 #include "tasks/tasks.h"
+#include "app/app.h"
+#include "net/net.h"
 #include "project.h"
-
-#include <app/app.h>
-
 #include "bsp.h"
 
 /* Defines ================================================================== */
@@ -101,6 +100,24 @@ __STATIC_INLINE void init_radio(void) {
   ERR_CHECK(trx_set_bandwidth(&device.trx, 125000));
 }
 
+static void hexdump(uint8_t * data, size_t size) {
+  size_t offset = 0;
+
+  log_printf("0x%08x: ", offset);
+  for (; offset < size; ++offset) {
+    log_printf("%02x ", data[offset]);
+
+    if ((offset+1) % 16 == 0) {
+      log_printf("\r\n");
+      if (offset + 1 != size) {
+        log_printf("0x%08x: ", offset);
+      }
+    }
+  }
+
+  log_printf("\r\n");
+}
+
 /* Shared functions ========================================================= */
 void project_main(void) {
   // Initialize BSP
@@ -140,11 +157,53 @@ void project_main(void) {
 
   init_radio();
 
+  uint32_t vrefint = 0;
+  // bsp_adc_get_vrefint(&vrefint);
+
+  net_init(&device.net, &(net_cfg_t){
+    .trx         = &device.trx,
+    .dev_mac     = 0xEBAC0C42,
+    .station_mac = 0xDA1BA10B,
+    .key         = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
+    .rand_seed  = vrefint,
+  });
+
   app_init(&device.app, &(app_cfg_t) {
+    .net         = &device.net,
     .pulse_i2c   = &device.board.i2c,
     .accel_i2c   = &device.board.i2c,
-    .gps_uart_no = 2,
+    .gps_uart_no = BSP_GPS_UART_NO,
   });
+
+  net_packet_t pkt;
+
+  net_packet_init(&device.net, &pkt, &(net_packet_cfg_t){
+    .cmd = NET_CMD_ACCEL_DATA,
+    .transport = NET_TRANSPORT_TYPE_UNICAST,
+    .target = 0,
+  });
+
+  pkt.payload.accel.sudden_movement = true;
+  pkt.payload.accel.x = 1001;
+  pkt.payload.accel.y = 5002;
+  pkt.payload.accel.z = 14003;
+
+  log_printf("Packet (%d):\r\n", pkt.size + NET_HEADER_SIZE);
+  hexdump((uint8_t *) &pkt, sizeof(pkt));
+
+  net_frame_t frame;
+
+  net_packet_serialize(&device.net, &frame, &pkt);
+
+  log_printf("Serialized (%d):\r\n", frame.size);
+  hexdump((uint8_t *) &frame, sizeof(frame));
+
+  net_packet_t dpkt;
+
+  net_packet_deserialize(&device.net, &frame, &dpkt);
+
+  log_printf("Deserialized (%d):\r\n", dpkt.size + NET_HEADER_SIZE);
+  hexdump((uint8_t *) &dpkt, sizeof(dpkt));
 
   log_info("Starting tasks");
 

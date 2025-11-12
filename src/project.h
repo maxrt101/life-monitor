@@ -28,8 +28,11 @@ typedef struct {
   /** Board context. Peripherals, etc. */
   board_t board;
 
-  /** LifeMonitor Application */
+  /** LifeMonitor Application Context */
   app_t app;
+
+  /** LifeMonitor RF Network Context */
+  net_t net;
 
   /** TRX Driver Handle */
   trx_t trx;

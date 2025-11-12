@@ -109,6 +109,8 @@ error_t app_init(app_t * app, app_cfg_t * cfg) {
 
   memset(app, 0, sizeof(app_t));
 
+  app->net = cfg->net;
+
   init_pulse(app, cfg->pulse_i2c);
   init_pos(app, cfg->accel_i2c);
   init_gps(app, cfg->gps_uart_no);
@@ -158,7 +160,6 @@ error_t app_pulse_process(app_t * app) {
       for (size_t i = 0; i < size; ++i) {
         beat |= pulse_process_sample(&app->pulse.ctx, (int32_t) app->pulse.samples[i].ir) == E_OK;
       }
-      // pulse_report_bpm(&app->pulse.ctx);
 
       // if (beat) {
       //   led_on(&app->board.leds[BSP_LED_MAIN]);

@@ -21,6 +21,7 @@ extern "C" {
 #include "sensors/pulse/pulse.h"
 #include "gps/gps.h"
 #include "error/error.h"
+#include "net/net.h"
 #include <stdbool.h>
 
 /* Defines ================================================================== */
@@ -39,6 +40,8 @@ typedef struct {
   bool is_running;
 
   app_flags_t flags;
+
+  net_t * net;
 
   struct {
     /** GPS (neo6m) uart context */
@@ -74,6 +77,7 @@ typedef struct {
 } app_t;
 
 typedef struct {
+  net_t  * net;
   i2c_t  * pulse_i2c;
   i2c_t  * accel_i2c;
   uint8_t  gps_uart_no;
