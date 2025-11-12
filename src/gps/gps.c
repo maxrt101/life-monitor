@@ -4,7 +4,7 @@
  * @date 08-11-2025
  * @author Maksym Tkachuk <max.r.tkachuk@gmail.com>
  *
- * @brief GPS
+ * @brief GPS NMEA Sentence Parser (only parses latitude/logitude)
  *
  *  ========================================================================= */
 
@@ -22,16 +22,32 @@
 /* Exposed macros =========================================================== */
 /* Enums ==================================================================== */
 /* Types ==================================================================== */
+/**
+ * NMEA sentence parser context
+ */
 typedef struct {
+  /**
+   * Since NMEA sentences are basically CSV data - store tokens as pointers
+   * to start of each value, with comma replaced with NULL
+   */
   struct {
     char * buffer[20];
     size_t size;
   } tokens;
+
+  /** Checksum comes at the end of sentece after '*' */
   char * checksum;
 } gps_parser_t;
 
 /* Variables ================================================================ */
 /* Private functions ======================================================== */
+/**
+ * Split raw sentence into tokens
+ *
+ * @param ctx Parser context. Will contain pointers to start of each token
+ * @param buffer NMEA sentence buffer
+ * @param size NMEA sentence size
+ */
 static error_t gps_tokenize(gps_parser_t * ctx, char * buffer, size_t size) {
   ASSERT_RETURN(ctx && buffer, E_NULL);
   ASSERT_RETURN(size, E_EMPTY);
@@ -43,10 +59,16 @@ static error_t gps_tokenize(gps_parser_t * ctx, char * buffer, size_t size) {
     char c = buffer[i];
 
     if (c == ',' || c == '*') {
+      // Store 'start' into token buffer
       ctx->tokens.buffer[ctx->tokens.size++] = start;
+
+      // Terminate token with NULL instead of a comma
       buffer[i] = '\0';
+
+      // Store new start
       start = &buffer[i+1];
 
+      // If checksum - terminate
       if (c == '*') {
         // TODO: Check CRC
         break;
@@ -56,6 +78,7 @@ static error_t gps_tokenize(gps_parser_t * ctx, char * buffer, size_t size) {
     i++;
   }
 
+  // Last 'token' is checksum
   ctx->checksum = start;
 
   return E_OK;
@@ -72,6 +95,7 @@ error_t gps_parse(gps_location_t * location, char * buffer, size_t size) {
 
   gps_parser_t ctx = {0};
 
+  // Tokenize sentence
   ERROR_CHECK_RETURN(gps_tokenize(&ctx, buffer, size));
 
 #if 0
@@ -84,12 +108,21 @@ error_t gps_parse(gps_location_t * location, char * buffer, size_t size) {
   log_printf("\r\n");
 #endif
 
+  // Check if any tokens got parsed
   ASSERT_RETURN(ctx.tokens.size, E_EMPTY);
 
   const char * header = ctx.tokens.buffer[0];
 
+  // Check if header starts '$' - which is a NMEA format requirement
   ASSERT_RETURN(header[0] == '$', E_INVAL);
 
+  /* Don't bother parsing talker (GPS satellite system name), skip it and
+   * go for message type, since we're only interested in actual coordinates
+   *
+   * 2 messages contain position:
+   * GLL (Geographic Position - Latitude/Longitude)
+   * RMC (Recommended Minimum Specific GNSS Data)
+   */
   if (strstr(header, "GLL") != NULL) {
     ASSERT_RETURN(ctx.tokens.size > 4, E_UNDERFLOW);
 
