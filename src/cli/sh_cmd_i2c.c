@@ -26,8 +26,15 @@
 static int8_t cmd_i2c(shell_t * sh, uint8_t argc, const char ** argv) {
   i2c_detect_result_t detect;
 
-  i2c_detect(&device.board.i2c, detect);
+  i2c_detect(BSP_PULSE_I2C(device.board), detect);
   i2c_detect_dump(detect);
+
+  if (BSP_PULSE_I2C(device.board) != BSP_ACCEL_I2C(device.board)) {
+    memset(detect, 0, sizeof(detect));
+
+    i2c_detect(BSP_ACCEL_I2C(device.board), detect);
+    i2c_detect_dump(detect);
+  }
 
   return SHELL_OK;
 }

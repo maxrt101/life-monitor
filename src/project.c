@@ -170,8 +170,8 @@ void project_main(void) {
 
   app_init(&device.app, &(app_cfg_t) {
     .net         = &device.net,
-    .pulse_i2c   = &device.board.i2c,
-    .accel_i2c   = &device.board.i2c,
+    .pulse_i2c   = BSP_PULSE_I2C(device.board),
+    .accel_i2c   = BSP_ACCEL_I2C(device.board),
     .gps_uart_no = BSP_GPS_UART_NO,
   });
 
