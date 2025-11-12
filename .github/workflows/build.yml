@@ -16,7 +16,7 @@ on:
       preset:
         description: "Preset"
         required: true
-        default: "LifeMonitor STM32L051 Debug"
+        default: "LifeMonitor LM.MBR.1 Debug"
       features:
         description: "Space-separated list of key-value feature toggles"
         required: false
@@ -59,7 +59,7 @@ jobs:
         export PATH="$PATH:$(pwd)/${{env.GCC_DIR}}/bin"
         cmake -B build -S . -G "Unix Makefiles" --preset "${{ env.PRESET }}" "${ARGS[@]}"
       env:
-        PRESET: ${{ inputs.preset == '' && 'LifeMonitor STM32L051 Debug' || inputs.preset }}
+        PRESET: ${{ inputs.preset == '' && 'LifeMonitor LM.MBR.1 Debug' || inputs.preset }}
 
     - name: Build
       run: cmake --build build --target LifeMonitor
