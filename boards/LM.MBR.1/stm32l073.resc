@@ -1,0 +1,23 @@
+using sysbus
+
+# Create machine
+mach create "stm32l073"
+
+# Copy machine platform from STM32L072
+machine LoadPlatformDescription @platforms/cpus/stm32l072.repl
+
+# Load compiled ELF
+sysbus LoadELF @cmake-build-lm-mbr-1-debug/LifeMonitor.elf
+
+# Will show USART1 window (though using run.sh/console.sh makes this redundant)
+showAnalyzer usart1
+
+# USART1 to PTY Terminal Redirection
+emulation CreateUartPtyTerminal "console" "/tmp/renode-life-monitor-console"
+connector Connect sysbus.usart1 console
+
+# USART1 to Socket Terminal Redirection
+#emulation CreateServerSocketTerminal 4242 "console"
+#connector Connect sysbus.usart1 console
+
+start
