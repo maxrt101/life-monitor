@@ -10,10 +10,21 @@
             "displayName": "LifeMonitor on STM32L051 - Debug",
             "description": "LifeMonitor on STM32L051 in Debug Build",
             "cacheVariables": {
-                "BOARD": "stm32l051",
+                "BOARD": "STM32L051",
                 "CMAKE_BUILD_TYPE": "DEBUG"
             },
             "binaryDir": "${sourceDir}/cmake-build-stm32l051-debug",
+            "generator": "Unix Makefiles"
+        },
+        {
+            "name": "LifeMonitor LM.MBR.1 Debug",
+            "displayName": "LifeMonitor on LM.MBR.1 - Debug",
+            "description": "LifeMonitor on LM.MBR.1 in Debug Build",
+            "cacheVariables": {
+                "BOARD": "LM.MBR.1",
+                "CMAKE_BUILD_TYPE": "DEBUG"
+            },
+            "binaryDir": "${sourceDir}/cmake-build-lm-mbr-1-debug",
             "generator": "Unix Makefiles"
         }
     ],
