@@ -41,7 +41,7 @@ static int8_t cmd_pulse(shell_t * sh, uint8_t argc, const char ** argv) {
     }
 
     app_pulse_process(&device.app);
-    // pulse_report_bpm(&device.app.pulse.ctx);
+    pulse_report_bpm(&device.app.pulse.ctx);
   }
 
   log_info("beats:    %u", device.app.pulse.ctx.total.beats);
