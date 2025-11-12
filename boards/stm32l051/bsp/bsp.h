@@ -25,6 +25,8 @@ extern "C" {
 #define BSP_LORA_DIO0 GPIO_BIND(LORA_DIO0)
 #define BSP_LORA_RESET GPIO_BIND(LORA_RST)
 
+#define BSP_GPS_UART_NO 2
+
 /* Default stacktrace depth */
 #define BSP_STACKTRACE_DEPTH 16
 
