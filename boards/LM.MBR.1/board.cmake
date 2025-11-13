@@ -44,7 +44,9 @@ project_add_define(
 
     # Generic Peripherals
     "BSP_LED_COUNT=3"
-    "BSP_LED_MAIN=0"
+    "BSP_LED_PULSE=0"
+    "BSP_LED_TRX=1"
+    "BSP_LED_ERR=2"
     "BSP_BTN_COUNT=1"
     "BSP_BTN_MAIN=0"
     "BSP_I2C_RECV_TIMEOUT=100"
