@@ -211,7 +211,7 @@ error_t app_register(app_t * app) {
     memset(app->net.key, 0, NET_KEY_SIZE);
     app->net.station_mac.value = 0;
 
-    net_packet_t reg;
+    net_packet_t reg = {0};
 
     ERROR_CHECK_RETURN(net_packet_init(&app->net, &reg, &(net_packet_cfg_t){
       .cmd          = NET_CMD_REGISTER,
@@ -219,13 +219,18 @@ error_t app_register(app_t * app) {
       .target.value = 0,
     }));
 
-    net_packet_t confirm;
+    reg.payload.reg.hw_version = PROJECT_VERSION_HW;
+    reg.payload.reg.sw_version_major = PROJECT_VERSION_SW_MAJOR;
+    reg.payload.reg.sw_version_minor = PROJECT_VERSION_SW_MINOR;
+    reg.payload.reg.sw_version_patch = PROJECT_VERSION_SW_PATCH;
+
+    net_packet_t confirm = {0};
 
     if (net_send(&app->net, &reg, &confirm, NET_REPEATS) == E_OK) {
       memcpy(app->net.key, confirm.payload.confirm.reg.key, NET_KEY_SIZE);
       app->net.station_mac.value = confirm.payload.confirm.reg.station_mac.value;
 
-      net_packet_t ping;
+      net_packet_t ping = {0};
 
       ERROR_CHECK_RETURN(net_packet_init(&app->net, &ping, &(net_packet_cfg_t){
          .cmd          = NET_CMD_PING,
@@ -369,7 +374,7 @@ error_t app_gps_process(app_t * app) {
 error_t app_send_status(app_t * app) {
   ASSERT_RETURN(app, E_NULL);
 
-  net_packet_t status;
+  net_packet_t status = {0};
 
   ERROR_CHECK_RETURN(net_packet_init(&app->net, &status, &(net_packet_cfg_t){
     .cmd          = NET_CMD_STATUS,
@@ -409,7 +414,7 @@ error_t app_send_status(app_t * app) {
 error_t app_send_location(app_t * app) {
   ASSERT_RETURN(app, E_NULL);
 
-  net_packet_t location;
+  net_packet_t location = {0};
 
   ERROR_CHECK_RETURN(net_packet_init(&app->net, &location, &(net_packet_cfg_t){
     .cmd          = NET_CMD_LOCATION,
@@ -429,7 +434,7 @@ error_t app_send_location(app_t * app) {
 error_t app_send_alert(app_t * app, net_alert_trigger_t trigger) {
   ASSERT_RETURN(app, E_NULL);
 
-  net_packet_t alert;
+  net_packet_t alert = {0};
 
   ERROR_CHECK_RETURN(net_packet_init(&app->net, &alert, &(net_packet_cfg_t){
     .cmd          = NET_CMD_ALERT,
