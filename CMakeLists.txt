@@ -27,9 +27,13 @@ set(SHOW_SIZE       1)
 
 # Feature flags
 set(FEATURES
+    # Network
     "PROJECT_DEVICE_MAC=0xDEADBEEF"
+    "NET_USE_FULL_CHANNEL_TABLE=0"
+    "USE_NET_PACKET_DUMP=1"
 
     # Application
+    "USE_MOCK_STORAGE=1"
     "USE_WDG=0"
     "USE_ULTRALOWPOWER=0"
 
