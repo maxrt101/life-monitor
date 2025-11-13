@@ -47,14 +47,21 @@ __STATIC_INLINE uint8_t storage_crc(storage_data_t * storage) {
 
 /* Shared functions ========================================================= */
 error_t storage_read(storage_data_t * storage) {
+#if USE_MOCK_STORAGE
+  return E_CORRUPT;
+#else
   ASSERT_RETURN(storage, E_NULL);
 
   memcpy(storage, __storage_start, sizeof(storage_data_t));
 
   return storage_crc(storage) == storage->crc ? E_OK : E_CORRUPT;
+#endif
 }
 
 error_t storage_write(storage_data_t * storage) {
+#if USE_MOCK_STORAGE
+  return E_OK;
+#else
   ASSERT_RETURN(storage, E_NULL);
 
   storage->crc = storage_crc(storage);
@@ -62,4 +69,5 @@ error_t storage_write(storage_data_t * storage) {
   nvm_erase((uint32_t) __storage_start, sizeof(storage_data_t));
 
   return nvm_write((uint32_t) __storage_start, (uint8_t *) storage, sizeof(storage_data_t));
+#endif
 }
