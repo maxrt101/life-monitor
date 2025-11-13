@@ -167,38 +167,60 @@ void project_main(void) {
     .reset_reason = os_get_reset_reason()
   });
 
-#if 0
-  net_packet_t pkt;
+#if 1
+  log_printf("Key:\r\n");
+  hexdump(device.app.net.key, NET_KEY_SIZE);
 
-  net_packet_init(&device.net, &pkt, &(net_packet_cfg_t){
+  net_packet_t pkt = {0};
+
+  net_packet_init(&device.app.net, &pkt, &(net_packet_cfg_t){
     .cmd = NET_CMD_STATUS,
     .transport = NET_TRANSPORT_TYPE_UNICAST,
     .target = 0,
   });
 
-  pkt.payload.status.avg_bpm = 70;
-  pkt.payload.status.bpm = 83;
-  pkt.payload.status.cpu_temp = 21;
+  pkt.payload.status.avg_bpm = 0x42;
+  pkt.payload.status.bpm = 0x69;
+  pkt.payload.status.cpu_temp = 0xff;
   pkt.payload.status.flags = 0;
   pkt.payload.status.reset_count = 4;
   pkt.payload.status.reset_reason = NET_RESET_REASON_SW_RST;
 
   log_printf("Packet (%d):\r\n", pkt.size + NET_HEADER_SIZE);
+  net_packet_dump(&pkt);
   hexdump((uint8_t *) &pkt, sizeof(pkt));
 
-  net_frame_t frame;
+  net_frame_t frame = {0};
 
-  net_packet_serialize(&device.net, &frame, &pkt);
+  net_packet_serialize(&device.app.net, &frame, &pkt);
 
   log_printf("Serialized (%d):\r\n", frame.size);
   hexdump((uint8_t *) &frame, sizeof(frame));
 
-  net_packet_t dpkt;
+  net_packet_t dpkt = {0};
 
-  net_packet_deserialize(&device.net, &frame, &dpkt);
+  net_packet_deserialize(&device.app.net, &frame, &dpkt);
 
   log_printf("Deserialized (%d):\r\n", dpkt.size + NET_HEADER_SIZE);
+  net_packet_dump(&dpkt);
   hexdump((uint8_t *) &dpkt, sizeof(dpkt));
+
+
+  log_printf("Station test:\r\n");
+
+  net_frame_t station_frame = {
+    .data = {0xd1, 0x9a, 0x9e, 0x9c, 0x9a, 0x9a, 0x9a, 0x9a, 0x71, 0x36, 0x96, 0xd8, 0x40, 0x81, 0x3b, 0x91, 0x9a, 0x99, 0x92, 0x9f, 0xd8, 0xf3, 0x7b, 0x37},
+    .size = 24
+  };
+
+  net_packet_t station_packet = {0};
+
+  net_packet_deserialize(&device.app.net, &station_frame, &station_packet);
+
+  log_printf("Deserialized Station Packet (%d):\r\n", station_packet.size + NET_HEADER_SIZE);
+  net_packet_dump(&station_packet);
+  hexdump((uint8_t *) &station_packet, sizeof(station_packet));
+
 #endif
 
   log_info("Starting tasks");
