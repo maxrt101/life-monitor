@@ -24,20 +24,29 @@
 void app_task_fn(__UNUSED void * ctx) {
   os_yield();
 
+  if (bsp_is_btn_pressed()) {
+    app_register(&device.app);
+  }
+
+  os_yield();
+
   while (1) {
-    if (device.app.is_running) {
+    if (app_is_running(&device.app)) {
       app_pulse_process(&device.app);
-    }
-    os_yield();
+      os_yield();
 
-    if (device.app.is_running) {
       app_pos_process(&device.app);
-    }
-    os_yield();
+      os_yield();
 
-    if (device.app.is_running) {
       app_gps_process(&device.app);
+      os_yield();
+
+      if (timeout_is_expired(&device.app.status_send_timeout)) {
+        app_send_status(&device.app);
+        timeout_start(&device.app.status_send_timeout, NET_STATUS_SEND_PERIOD);
+      }
     }
+
     os_yield();
   }
 }

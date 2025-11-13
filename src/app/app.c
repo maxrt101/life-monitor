@@ -10,7 +10,10 @@
 
 /* Includes ================================================================= */
 #include "app/app.h"
+
+#include "boards/STM32L051/bsp/bsp.h"
 #include "error/assertion.h"
+#include "led/led.h"
 #include "log/log.h"
 
 /* Defines ================================================================== */
@@ -107,13 +110,50 @@ __STATIC_INLINE void init_gps(app_t * app, uint8_t uart_no) {
 error_t app_init(app_t * app, app_cfg_t * cfg) {
   ASSERT_RETURN(app, E_NULL);
 
+  log_info("Initializing Application");
+
   memset(app, 0, sizeof(app_t));
 
-  app->net = cfg->net;
+  app->led.pulse    = cfg->led.pulse;
+  app->led.trx      = cfg->led.trx;
+  app->led.error    = cfg->led.error;
+  app->reset_reason = cfg->reset_reason;
+
+  uint32_t vrefint = 1488;
+  // bsp_adc_get_vrefint(&vrefint);
+
+  net_cfg_t net_cfg = {
+    .trx           = cfg->trx,
+    .dev_mac.value = PROJECT_DEVICE_MAC,
+    .rand_seed     = vrefint,
+  };
+
+  if (storage_read(&app->storage) == E_OK) {
+    log_info("Registered to 0x%x", app->storage.station_mac.value);
+
+    net_cfg.station_mac.value = app->storage.station_mac.value;
+    memcpy(net_cfg.key, app->storage.key, NET_KEY_SIZE);
+  } else {
+    log_warn("Storage is corrupt");
+
+    net_cfg.station_mac.value = 0;
+    memset(net_cfg.key, 0, NET_KEY_SIZE);
+
+    memset(&app->storage, 0, sizeof(storage_data_t));
+  }
+
+  app->storage.reset_count += 1;
+  storage_write(&app->storage);
+
+  app->reset_count = app->storage.reset_count;
+
+  net_init(&app->net, &net_cfg);
 
   init_pulse(app, cfg->pulse_i2c);
   init_pos(app, cfg->accel_i2c);
   init_gps(app, cfg->gps_uart_no);
+
+  timeout_start(&app->status_send_timeout, NET_STATUS_SEND_PERIOD);
 
   return E_OK;
 }
@@ -140,6 +180,74 @@ bool app_get_flag(app_t * app, app_flags_t flag) {
  return app->flags & flag > 0;
 }
 
+bool app_is_running(app_t * app) {
+  ASSERT_RETURN(app, false);
+
+  return app->is_running;
+}
+
+error_t app_start(app_t * app) {
+  ASSERT_RETURN(app, E_NULL);
+
+  app->is_running = true;
+
+  return E_OK;
+}
+
+error_t app_stop(app_t * app) {
+  ASSERT_RETURN(app, E_NULL);
+
+  app->is_running = false;
+
+  return E_OK;
+}
+
+error_t app_register(app_t * app) {
+  ASSERT_RETURN(app, E_NULL);
+
+  log_info("Registration");
+
+  while (1) {
+    memset(app->net.key, 0, NET_KEY_SIZE);
+    app->net.station_mac.value = 0;
+
+    net_packet_t reg;
+
+    ERROR_CHECK_RETURN(net_packet_init(&app->net, &reg, &(net_packet_cfg_t){
+      .cmd          = NET_CMD_REGISTER,
+      .transport    = NET_TRANSPORT_TYPE_BROADCAST,
+      .target.value = 0,
+    }));
+
+    net_packet_t confirm;
+
+    if (net_send(&app->net, &reg, &confirm, NET_REPEATS) == E_OK) {
+      memcpy(app->net.key, confirm.payload.confirm.reg.key, NET_KEY_SIZE);
+      app->net.station_mac.value = confirm.payload.confirm.reg.station_mac.value;
+
+      net_packet_t ping;
+
+      ERROR_CHECK_RETURN(net_packet_init(&app->net, &ping, &(net_packet_cfg_t){
+         .cmd          = NET_CMD_PING,
+         .transport    = NET_TRANSPORT_TYPE_UNICAST,
+         .target.value = 0,
+      }));
+
+      if (net_send(&app->net, &ping, &confirm, NET_REPEATS) == E_OK && confirm.cmd == NET_CMD_CONFIRM) {
+        log_info("Registered to 0x%x", app->net.station_mac.value);
+
+        memcpy(app->storage.key, confirm.payload.confirm.reg.key, NET_KEY_SIZE);
+        app->storage.station_mac.value = confirm.payload.confirm.reg.station_mac.value;
+        storage_write(&app->storage);
+
+        break;
+      }
+    }
+  }
+
+  return E_OK;
+}
+
 error_t app_pulse_process(app_t * app) {
   ASSERT_RETURN(app, E_NULL);
 
@@ -150,7 +258,7 @@ error_t app_pulse_process(app_t * app) {
   max3010x_poll_irq_flags(&app->pulse.max3010x);
 
   if (max3010x_process(&app->pulse.max3010x) == MAX3010X_STATUS_SAMPLES_READY) {
-    // led_off(&app->board.leds[BSP_LED_MAIN]);
+    led_off(app->led.pulse);
 
     size_t size = PULSE_SAMPLE_COUNT;
 
@@ -161,9 +269,18 @@ error_t app_pulse_process(app_t * app) {
         beat |= pulse_process_sample(&app->pulse.ctx, (int32_t) app->pulse.samples[i].ir) == E_OK;
       }
 
-      // if (beat) {
-      //   led_on(&app->board.leds[BSP_LED_MAIN]);
-      // }
+      if (beat) {
+        led_on(app->led.pulse);
+
+        if (app_is_running(app)) {
+          uint32_t bpm;
+          pulse_approximate_bpm(&app->pulse.ctx, &bpm);
+
+          if (bpm < PULSE_MIN_ALERT_THRESHOLD || bpm > PULSE_MAX_ALERT_THRESHOLD) {
+            app_send_alert(app, NET_ALERT_TRIGGER_PULSE_THRESHOLD);
+          }
+        }
+      }
     }
     return E_OK;
   }
@@ -179,12 +296,14 @@ error_t app_pos_process(app_t * app) {
   }
 
   if (mpu6050_measure(&app->pos.mpu6050, &app->pos.sample) == E_OK) {
-    // led_off(&app->board.leds[BSP_LED_MAIN]);
+    led_off(app->led.error);
 
-    // log_printf("accel {x=%d y=%d z=%d}; gyro {x=%d y=%d z=%d}\r\n",
-    //   data.accel.x, data.accel.y, data.accel.z,
-    //   data.gyro.x,  data.gyro.y,  data.gyro.z
-    // );
+#if 0
+    log_printf("accel {x=%d y=%d z=%d}; gyro {x=%d y=%d z=%d}\r\n",
+      app->pos.sample.accel.x, app->pos.sample.accel.y, app->pos.sample.accel.z,
+      app->pos.sample.gyro.x,  app->pos.sample.gyro.y,  app->pos.sample.gyro.z
+    );
+#endif
 
     acceleration_pos_t sample = {
       .x = app->pos.sample.accel.x,
@@ -192,12 +311,15 @@ error_t app_pos_process(app_t * app) {
       .z = app->pos.sample.accel.z
     };
 
-    if (acceleration_monitor_process_sample(&app->pos.monitor, &sample) == ACCELERATION_RESULT_SUDDEN_MOVEMENT_DETECTED) {
-      // led_on(&app->board.leds[BSP_LED_MAIN]);
-      return E_OK;
+    acceleration_process_result_t res = acceleration_monitor_process_sample(&app->pos.monitor, &sample);
+
+    if (res == ACCELERATION_RESULT_SUDDEN_MOVEMENT_DETECTED) {
+      led_on(app->led.error);
+
+      app_send_alert(app, NET_ALERT_TRIGGER_SUDDEN_MOVEMENT);
     }
 
-    return E_EMPTY;
+    return E_OK;
   }
 
   return E_AGAIN;
@@ -242,4 +364,80 @@ error_t app_gps_process(app_t * app) {
   app->gps.index = 0;
 
   return err;
+}
+
+error_t app_send_status(app_t * app) {
+  ASSERT_RETURN(app, E_NULL);
+
+  net_packet_t status;
+
+  ERROR_CHECK_RETURN(net_packet_init(&app->net, &status, &(net_packet_cfg_t){
+    .cmd          = NET_CMD_STATUS,
+    .transport    = NET_TRANSPORT_TYPE_UNICAST,
+    .target.value = 0,
+  }));
+
+  status.payload.status.flags        = 0;
+  status.payload.status.reset_reason = app->reset_reason;
+  status.payload.status.reset_count  = app->reset_count;
+
+  uint32_t bpm = 80;
+  pulse_approximate_bpm(&app->pulse.ctx, &bpm);
+  status.payload.status.bpm = (uint8_t) bpm;
+
+  status.payload.status.avg_bpm = PULSE_CALCULATE_BPM_TOTAL_AVG(app->pulse.ctx.total.beats, app->pulse.ctx.total.time);
+
+  int32_t temp = 20;
+  // bsp_adc_get_temp(&temp);
+  status.payload.status.cpu_temp = (int8_t) temp;
+
+  if (app_get_flag(app, APP_FLAG_PULSE_SENSOR_FAILURE)) {
+    status.payload.status.flags |= NET_STATUS_FLAG_PULSE_SENSOR_FAILURE;
+  }
+
+  if (app_get_flag(app, APP_FLAG_ACCEL_SENSOR_FAILURE)) {
+    status.payload.status.flags |= NET_STATUS_FLAG_ACCEL_SENSOR_FAILURE;
+  }
+
+  if (app_get_flag(app, APP_FLAG_GPS_FAILURE)) {
+    status.payload.status.flags |= NET_STATUS_FLAG_GPS_FAILURE;
+  }
+
+  return net_packet_send(&app->net, &status);
+}
+
+error_t app_send_location(app_t * app) {
+  ASSERT_RETURN(app, E_NULL);
+
+  net_packet_t location;
+
+  ERROR_CHECK_RETURN(net_packet_init(&app->net, &location, &(net_packet_cfg_t){
+    .cmd          = NET_CMD_LOCATION,
+    .transport    = NET_TRANSPORT_TYPE_UNICAST,
+    .target.value = 0,
+  }));
+
+  location.payload.location.latitude.direction = app->gps.last_location.latitude.direction;
+  location.payload.location.longitude.direction = app->gps.last_location.longitude.direction;
+
+  strcpy(location.payload.location.latitude.value, app->gps.last_location.latitude.value);
+  strcpy(location.payload.location.longitude.value, app->gps.last_location.longitude.value);
+
+  return net_packet_send(&app->net, &location);
+}
+
+error_t app_send_alert(app_t * app, net_alert_trigger_t trigger) {
+  ASSERT_RETURN(app, E_NULL);
+
+  net_packet_t alert;
+
+  ERROR_CHECK_RETURN(net_packet_init(&app->net, &alert, &(net_packet_cfg_t){
+    .cmd          = NET_CMD_ALERT,
+    .transport    = NET_TRANSPORT_TYPE_UNICAST,
+    .target.value = 0,
+  }));
+
+  alert.payload.alert.trigger = trigger;
+
+  return net_packet_send(&app->net, &alert);
 }
