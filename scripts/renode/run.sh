@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 RESC_STM32L051="boards/stm32l051/stm32l051.resc"
+RESC_LM_MBR_1="boards/LM.MBR.1/stm32l073.resc"
 
-RESC=$RESC_STM32L051
+RESC=$RESC_LM_MBR_1
 
 # FIXME: Currently 'renode' is a function (or alias) in profile
 #        Should think of more permanent solution
