@@ -2,15 +2,11 @@ from station.utils import validate_enum, assert_raise, bytes_to_str
 from station.radio.types import (
     KEY_SIZE,
     Command,
-    TransportType,
     ResetReason,
     AlertTrigger,
-    StatusFlags,
 )
 
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
-from enum import Enum
 from typing import Type
 import struct
 

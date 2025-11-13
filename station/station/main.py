@@ -35,6 +35,7 @@ def main():
         origin=0xEBAC0C42,
         target=0xDA1BA10B,
         key=key,
+        # Status payload
         flags=0,
         reset_reason=ResetReason.WDG,
         reset_count=8,
