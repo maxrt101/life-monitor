@@ -124,7 +124,7 @@ error_t pulse_process_sample(pulse_t * pulse, int32_t sample) {
   int32_t gauss_res = gauss_filter(pulse, dcf_res);
   int32_t filtered  = weighted_moving_average(pulse, gauss_res);
 
-#if 1
+#if 0
   uint32_t bpm = 0;
   pulse_approximate_bpm(pulse, &bpm);
 
