@@ -13,6 +13,8 @@
 #include "error/assertion.h"
 #include <stdlib.h>
 
+#include "log/log.h"
+
 /* Defines ================================================================== */
 #define LOG_TAG net
 #define CRC16_INIT 0x42
@@ -133,7 +135,7 @@ uint16_t net_crc(uint8_t * data, uint8_t size) {
   while (size--) {
     x = crc >> 8 ^ *data++;
     x ^= x >> 4;
-    crc = (crc << 8) ^ ((uint16_t)(x << 12)) ^ ((uint16_t)(x <<5)) ^ ((uint16_t)x);
+    crc = (crc << 8) ^ ((uint16_t)(x << 12)) ^ ((uint16_t)(x << 5)) ^ ((uint16_t)x);
   }
 
   return crc;
@@ -141,7 +143,7 @@ uint16_t net_crc(uint8_t * data, uint8_t size) {
 
 error_t net_frame_encrypt(net_t * net, net_frame_t * frame) {
   ASSERT_RETURN(net && frame, E_NULL);
-  ASSERT_RETURN(frame->size < NET_HEADER_SIZE + 2, E_INVAL); // Header + CRC
+  ASSERT_RETURN(frame->size > NET_HEADER_SIZE + 2, E_INVAL); // Header + CRC
 
   uint8_t data[NET_PACKET_MAX_SIZE];
 
@@ -168,7 +170,7 @@ error_t net_frame_encrypt(net_t * net, net_frame_t * frame) {
 
 error_t net_frame_decrypt(net_t * net, net_frame_t * frame) {
   ASSERT_RETURN(net && frame, E_NULL);
-  ASSERT_RETURN(frame->size < NET_HEADER_SIZE + 4, E_INVAL); // Header + CRC + salt
+  ASSERT_RETURN(frame->size > NET_HEADER_SIZE + 4, E_INVAL); // Header + CRC + salt
 
   uint8_t data[NET_PACKET_MAX_SIZE];
 

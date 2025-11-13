@@ -1,3 +1,6 @@
 [submodule "sdk"]
 	path = sdk
 	url = https://github.com/maxrt101/sdk.git
+[submodule "station/linux-sx1278"]
+	path = station/linux-sx1278
+	url = https://github.com/maxrt101/linux-sx1278.git

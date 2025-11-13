@@ -22,6 +22,11 @@ extern "C" {
 /** Size of packet header (which is a mandatory part of a packet) */
 #define NET_HEADER_SIZE 14
 
+/** Include net_packet_dump into compilation */
+#ifndef USE_NET_PACKET_DUMP
+#define USE_NET_PACKET_DUMP 1
+#endif
+
 /* Macros =================================================================== */
 /* Enums ==================================================================== */
 /* Types ==================================================================== */
@@ -62,12 +67,12 @@ typedef __PACKED_STRUCT {
 typedef __PACKED_STRUCT {
   __PACKED_STRUCT {
     char direction;
-    char value[10];
+    char value[14];
   } latitude;
 
   __PACKED_STRUCT {
     char direction;
-    char value[10];
+    char value[14];
   } longitude;
 } net_location_payload_t;
 
@@ -146,6 +151,15 @@ error_t net_packet_serialize(net_t * net, net_frame_t * frame, net_packet_t * pa
  * @param packet Decrypted packet will be put here
  */
 error_t net_packet_deserialize(net_t * net, net_frame_t * frame, net_packet_t * packet);
+
+#if USE_NET_PACKET_DUMP
+/**
+ * Dump packet to console in human-readable format
+ *
+ * @param packet Packet to dump
+ */
+error_t net_packet_dump(net_packet_t * packet);
+#endif
 
 #ifdef __cplusplus
 }
