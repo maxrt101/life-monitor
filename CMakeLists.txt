@@ -27,8 +27,7 @@ set(SHOW_SIZE       1)
 
 # Feature flags
 set(FEATURES
-    # Device Defaults
-    "PROJECT_DEFAULT_DEVICE_ID=0xEBAC0C"
+    "PROJECT_DEVICE_MAC=0xDEADBEEF"
 
     # Application
     "USE_WDG=0"
@@ -55,6 +54,11 @@ set(FEATURES
     # Debug Log Configuration (Modules)
     "LOG_ENABLE_main=1"
     "LOG_ENABLE_shell=1"
+    "LOG_ENABLE_app=1"
+    "LOG_ENABLE_net=1"
+    "LOG_ENABLE_storage=1"
+    "LOG_ENABLE_pulse=1"
+    "LOG_ENABLE_gps=1"
     "LOG_ENABLE_btn=1"
     "LOG_ENABLE_led=1"
     "LOG_ENABLE_pwm=0"
@@ -68,8 +72,6 @@ set(FEATURES
     "LOG_ENABLE_ds28=0"
     "LOG_ENABLE_aht=0"
     "LOG_ENABLE_max3010x=1"
-    "LOG_ENABLE_pulse=1"
-    "LOG_ENABLE_gps=1"
     "LOG_ENABLE_nvm_crc=0"
     "LOG_ENABLE_hal_nvm=0"
     "LOG_ENABLE_hal_spi=0"
