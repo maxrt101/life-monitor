@@ -36,17 +36,13 @@ extern "C" {
  * Network Command
  */
 typedef __PACKED_ENUM {
-  NET_CMD_CONFIRM        = 1,
-  NET_CMD_REJECT         = 2,
-
-  NET_CMD_REGISTER       = 16,
-
-  NET_CMD_SYSTEM_DATA    = 32,
-  NET_CMD_LOCATION_DATA  = 33,
-  NET_CMD_PULSE_DATA     = 34,
-  NET_CMD_ACCEL_DATA     = 35,
-
-  NET_CMD_ALARM          = 64,
+  NET_CMD_PING      = 0,
+  NET_CMD_CONFIRM   = 1,
+  NET_CMD_REJECT    = 2,
+  NET_CMD_REGISTER  = 3,
+  NET_CMD_STATUS    = 4,
+  NET_CMD_LOCATION  = 5,
+  NET_CMD_ALERT     = 6,
 } net_cmd_t;
 
 /**
@@ -59,22 +55,34 @@ typedef enum {
 } net_transport_type_t;
 
 /**
- * Network Alarm Type
- */
-typedef __PACKED_ENUM {
-  NET_ALARM_WARNING  = 1,
-  NET_ALARM_CRITICAL = 2,
-} net_alarm_type_t;
-
-/**
  * Network Alarm Trigger
  */
 typedef __PACKED_ENUM {
-  NET_ALARM_TRIGGER_PULSE                 = 1,
-  NET_ALARM_TRIGGER_MOVEMENT              = 2,
-  NET_ALARM_TRIGGER_MOVEMENT_AND_MOVEMENT = 3,
-  NET_ALARM_TRIGGER_CONNECTION_LOST       = 4,
-} net_alarm_trigger_t;
+  NET_ALERT_TRIGGER_PULSE_THRESHOLD = 1,
+  NET_ALERT_TRIGGER_SUDDEN_MOVEMENT = 2,
+} net_alert_trigger_t;
+
+/**
+ * Device Reset Reason
+ */
+typedef __PACKED_ENUM {
+  NET_RESET_REASON_UNK    = 0,
+  NET_RESET_REASON_HW_RST = 1,
+  NET_RESET_REASON_SW_RST = 2,
+  NET_RESET_REASON_WDG    = 3,
+  NET_RESET_REASON_WWDG   = 4,
+  NET_RESET_REASON_POR    = 5,
+  NET_RESET_REASON_BOR    = 6,
+} net_reset_reason_t;
+
+/**
+ * Network status flags
+ */
+typedef __PACKED_ENUM {
+  NET_STATUS_FLAG_PULSE_SENSOR_FAILURE = (1 << 0),
+  NET_STATUS_FLAG_ACCEL_SENSOR_FAILURE = (1 << 1),
+  NET_STATUS_FLAG_GPS_FAILURE          = (1 << 2),
+} net_status_flags_t;
 
 /* Types ==================================================================== */
 /**

@@ -19,11 +19,6 @@ extern "C" {
 #include <stdbool.h>
 
 /* Defines ================================================================== */
-/** Will send data from sensors alongside default payload in some packets */
-#ifndef NET_SEND_EXT_DATA
-#define NET_SEND_EXT_DATA 1
-#endif
-
 /** Size of packet header (which is a mandatory part of a packet) */
 #define NET_HEADER_SIZE 14
 
@@ -31,26 +26,37 @@ extern "C" {
 /* Enums ==================================================================== */
 /* Types ==================================================================== */
 /** NET_CMD_CONFIRM Payload */
-typedef __PACKED_STRUCT {} net_confirm_payload_t;
+typedef __PACKED_STRUCT {
+  __PACKED_UNION {
+    struct {
+      net_mac_t station_mac;
+      net_key_t key;
+    } reg;
+  };
+} net_confirm_payload_t;
 
 /** NET_CMD_REJECT Payload */
-typedef __PACKED_STRUCT {} net_reject_payload_t;
+typedef __PACKED_STRUCT {
+  uint8_t reason;
+} net_reject_payload_t;
 
 /** NET_CMD_REGISTER Payload */
 typedef __PACKED_STRUCT {
-  net_mac_t station_mac;
-  net_key_t key;
+  uint8_t hw_version;
+  uint8_t sw_version_major;
+  uint8_t sw_version_minor;
+  uint8_t sw_version_patch;
 } net_register_payload_t;
 
-/** NET_CMD_SYSTEM_DATA Payload */
+/** NET_CMD_STATUS Payload */
 typedef __PACKED_STRUCT {
-  uint8_t cpu_temp;
-
-  __PACKED_STRUCT {
-    uint8_t  percent;
-    uint16_t mv;
-  } bat;
-} net_system_data_payload_t;
+  net_status_flags_t flags;
+  net_reset_reason_t reset_reason;
+  uint8_t            reset_count;
+  int8_t             cpu_temp;
+  uint8_t            bpm;
+  uint8_t            avg_bpm;
+} net_status_payload_t;
 
 /** NET_CMD_LOCATION_DATA Payload */
 typedef __PACKED_STRUCT {
@@ -63,39 +69,12 @@ typedef __PACKED_STRUCT {
     char direction;
     char value[10];
   } longitude;
-} net_location_data_payload_t;
-
-/** NET_CMD_PULSE_DATA Payload */
-typedef __PACKED_STRUCT {
-  uint8_t bpm;
-
-#if NET_SEND_EXT_DATA
-  uint8_t avg_bpm;
-//  uint16_t sec;
-
-  uint32_t raw;
-  uint32_t lpf;
-  uint32_t gauss;
-  uint32_t filtered;
-#endif
-} net_pulse_data_payload_t;
-
-/** NET_CMD_ACCEL_DATA Payload */
-typedef __PACKED_STRUCT {
-  bool sudden_movement;
-
-#if NET_SEND_EXT_DATA
-  int16_t x;
-  int16_t y;
-  int16_t z;
-#endif
-} net_accel_data_payload_t;
+} net_location_payload_t;
 
 /** NET_CMD_ALARM Payload */
 typedef __PACKED_STRUCT {
-  net_alarm_type_t    type;
-  net_alarm_trigger_t trigger;
-} net_alarm_payload_t;
+  net_alert_trigger_t trigger;
+} net_alert_payload_t;
 
 /**
  * Network packet
@@ -111,15 +90,13 @@ typedef __PACKED_STRUCT {
 
   /** Packet payload union */
   __PACKED_UNION {
-    net_confirm_payload_t       confirm;
-    net_reject_payload_t        reject;
-    net_register_payload_t      reg;
-    net_system_data_payload_t   system;
-    net_location_data_payload_t location;
-    net_pulse_data_payload_t    pulse;
-    net_accel_data_payload_t    accel;
-    net_alarm_payload_t         alarm;
-    uint8_t                     raw[0];
+    net_confirm_payload_t  confirm;
+    net_reject_payload_t   reject;
+    net_register_payload_t reg;
+    net_status_payload_t   status;
+    net_location_payload_t location;
+    net_alert_payload_t    alert;
+    uint8_t                raw[0];
   } payload;
 } net_packet_t;
 

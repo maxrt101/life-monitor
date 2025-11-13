@@ -44,6 +44,9 @@ error_t net_packet_init(net_t * net, net_packet_t * packet, net_packet_cfg_t * c
   }
 
   switch (cfg->cmd) {
+    case NET_CMD_PING:
+      packet->size = 0;
+      break;
     case NET_CMD_CONFIRM:
       packet->size = sizeof(net_confirm_payload_t);
       break;
@@ -53,20 +56,14 @@ error_t net_packet_init(net_t * net, net_packet_t * packet, net_packet_cfg_t * c
     case NET_CMD_REGISTER:
       packet->size = sizeof(net_register_payload_t);
       break;
-    case NET_CMD_SYSTEM_DATA:
-      packet->size = sizeof(net_system_data_payload_t);
+    case NET_CMD_STATUS:
+      packet->size = sizeof(net_status_payload_t);
       break;
-    case NET_CMD_LOCATION_DATA:
-      packet->size = sizeof(net_location_data_payload_t);
+    case NET_CMD_LOCATION:
+      packet->size = sizeof(net_location_payload_t);
       break;
-    case NET_CMD_PULSE_DATA:
-      packet->size = sizeof(net_pulse_data_payload_t);
-      break;
-    case NET_CMD_ACCEL_DATA:
-      packet->size = sizeof(net_accel_data_payload_t);
-      break;
-    case NET_CMD_ALARM:
-      packet->size = sizeof(net_alarm_payload_t);
+    case NET_CMD_ALERT:
+      packet->size = sizeof(net_alert_payload_t);
       break;
     default:
       return E_INVAL;
@@ -86,31 +83,17 @@ error_t net_packet_serialize(net_t * net, net_frame_t * frame, net_packet_t * pa
   TO_BIG_ENDIAN32(pkt.origin.value);
 
   switch (pkt.cmd) {
+    case NET_CMD_PING:
+      break;
     case NET_CMD_CONFIRM:
       break;
     case NET_CMD_REJECT:
       break;
     case NET_CMD_REGISTER:
       break;
-    case NET_CMD_SYSTEM_DATA:
-      TO_BIG_ENDIAN16(pkt.payload.system.bat.mv);
+    case NET_CMD_STATUS:
       break;
-    case NET_CMD_LOCATION_DATA:
-      break;
-    case NET_CMD_PULSE_DATA:
-#if NET_SEND_EXT_DATA
-      TO_BIG_ENDIAN32(pkt.payload.pulse.raw);
-      TO_BIG_ENDIAN32(pkt.payload.pulse.lpf);
-      TO_BIG_ENDIAN32(pkt.payload.pulse.gauss);
-      TO_BIG_ENDIAN32(pkt.payload.pulse.filtered);
-#endif
-      break;
-    case NET_CMD_ACCEL_DATA:
-      TO_BIG_ENDIAN16(pkt.payload.accel.x);
-      TO_BIG_ENDIAN16(pkt.payload.accel.y);
-      TO_BIG_ENDIAN16(pkt.payload.accel.z);
-      break;
-    case NET_CMD_ALARM:
+    case NET_CMD_ALERT:
       break;
     default:
       return E_INVAL;
@@ -149,31 +132,19 @@ error_t net_packet_deserialize(net_t * net, net_frame_t * frame, net_packet_t * 
   FROM_BIG_ENDIAN32(packet->origin.value);
 
   switch (packet->cmd) {
+    case NET_CMD_PING:
+      break;
     case NET_CMD_CONFIRM:
       break;
     case NET_CMD_REJECT:
       break;
     case NET_CMD_REGISTER:
       break;
-    case NET_CMD_SYSTEM_DATA:
-      FROM_BIG_ENDIAN16(packet->payload.system.bat.mv);
+    case NET_CMD_STATUS:
       break;
-    case NET_CMD_LOCATION_DATA:
+    case NET_CMD_LOCATION:
       break;
-    case NET_CMD_PULSE_DATA:
-#if NET_SEND_EXT_DATA
-      FROM_BIG_ENDIAN32(packet->payload.pulse.raw);
-      FROM_BIG_ENDIAN32(packet->payload.pulse.lpf);
-      FROM_BIG_ENDIAN32(packet->payload.pulse.gauss);
-      FROM_BIG_ENDIAN32(packet->payload.pulse.filtered);
-#endif
-      break;
-    case NET_CMD_ACCEL_DATA:
-      FROM_BIG_ENDIAN16(packet->payload.accel.x);
-      FROM_BIG_ENDIAN16(packet->payload.accel.y);
-      FROM_BIG_ENDIAN16(packet->payload.accel.z);
-      break;
-    case NET_CMD_ALARM:
+    case NET_CMD_ALERT:
       break;
     default:
       return E_INVAL;

@@ -18,6 +18,17 @@
 #define CRC16_INIT 0x42
 
 /* Macros =================================================================== */
+#define STATUS_LED_CTL(__net, __on)                                           \
+  do {                                                                        \
+    if (__net->status_led) {                                                  \
+      if (__on) {                                                             \
+        led_on(__net->status_led);                                            \
+      } else {                                                                \
+        led_off(__net->status_led);                                           \
+      }                                                                       \
+    }                                                                         \
+  } while (0)
+
 /* Exposed macros =========================================================== */
 /* Enums ==================================================================== */
 /* Types ==================================================================== */
@@ -27,12 +38,15 @@
 error_t net_init(net_t * net, net_cfg_t * cfg) {
   ASSERT_RETURN(net && cfg, E_NULL);
 
-  net->dev_mac.value = cfg->dev_mac.value;
-  net->station_mac.value = cfg->station_mac.value;
-  memcpy(net->key, cfg->key, NET_KEY_SIZE);
+  memset(net, 0, sizeof(net_t));
 
-  net->trx       = cfg->trx;
-  net->packet_id = 0;
+  net->dev_mac.value     = cfg->dev_mac.value;
+  net->station_mac.value = cfg->station_mac.value;
+  net->trx               = cfg->trx;
+  net->packet_id         = 0;
+  net->status_led        = cfg->status_led;
+
+  memcpy(net->key, cfg->key, NET_KEY_SIZE);
 
   ERROR_CHECK_RETURN(net_hopping_init(&net->hopping));
 
@@ -48,7 +62,11 @@ error_t net_packet_send(net_t * net, net_packet_t * packet) {
 
   ERROR_CHECK_RETURN(net_packet_serialize(net, &frame, packet));
 
-  return trx_send(net->trx, frame.data, frame.size);
+  STATUS_LED_CTL(net, true);
+  error_t err = trx_send(net->trx, frame.data, frame.size);
+  STATUS_LED_CTL(net, false);
+
+  return err;
 }
 
 error_t net_packet_recv(net_t * net, net_packet_t * packet, timeout_t * timeout) {
@@ -57,7 +75,11 @@ error_t net_packet_recv(net_t * net, net_packet_t * packet, timeout_t * timeout)
   net_frame_t frame;
   size_t size = TRX_MAX_PACKET_SIZE;
 
-  ERROR_CHECK_RETURN(trx_recv(net->trx, frame.data, &size, timeout));
+  STATUS_LED_CTL(net, true);
+  error_t err = trx_recv(net->trx, frame.data, &size, timeout);
+  STATUS_LED_CTL(net, false);
+
+  ERROR_CHECK_RETURN(err);
 
   frame.size = size;
 

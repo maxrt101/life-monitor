@@ -21,6 +21,8 @@ extern "C" {
 #include "trx/trx.h"
 #include <stdint.h>
 
+#include "led/led.h"
+
 /* Defines ================================================================== */
 /** Default number of repeats for packets, that require an answer */
 #ifndef NET_REPEATS
@@ -30,6 +32,11 @@ extern "C" {
 /** Default listening timeout for packets, that require an answer */
 #ifndef NET_RECV_TIMEOUT
 #define NET_RECV_TIMEOUT 100
+#endif
+
+/** Default period for sending statuses */
+#ifndef NET_STATUS_SEND_PERIOD
+#define NET_STATUS_SEND_PERIOD 5000
 #endif
 
 /* Macros =================================================================== */
@@ -45,6 +52,7 @@ typedef struct net_t {
   uint16_t      packet_id;    /** Current Packet ID */
   trx_t *       trx;          /** TRX Interface to send/recv data through */
   net_hopping_t hopping;      /** Network Hopping Context */
+  led_t *       status_led;   /** LED instance that signals TRX work */
 } net_t;
 
 /**
@@ -55,6 +63,7 @@ typedef struct net_cfg_t {
   net_mac_t dev_mac;      /** Device MAC */
   net_mac_t station_mac;  /** Station MAC */
   net_key_t key;          /** Encryption Key */
+  led_t *   status_led;   /** LED instance that signals TRX work */
   uint32_t  rand_seed;    /** Seed for RNG */
 } net_cfg_t;
 
