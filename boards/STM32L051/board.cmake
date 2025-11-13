@@ -13,7 +13,7 @@ include_guard(GLOBAL)
 ####################    VARIABLES    ####################
 set(BOARD_NAME       "STM32L051")
 set(BOARD_VERSION    "0.1")
-set(PROJECT_VER_HW   1)
+set(PROJECT_VER_HW   0)
 set(MCU              "STM32L051C8T6")
 set(CMAKE_C_STANDARD 17)
 
@@ -44,7 +44,9 @@ project_add_define(
 
     # Generic Peripherals
     "BSP_LED_COUNT=1"
-    "BSP_LED_MAIN=0"
+    "BSP_LED_PULSE=0"
+    "BSP_LED_TRX=0"
+    "BSP_LED_ERR=0"
     "BSP_BTN_COUNT=1"
     "BSP_BTN_MAIN=0"
     "BSP_I2C_RECV_TIMEOUT=100"

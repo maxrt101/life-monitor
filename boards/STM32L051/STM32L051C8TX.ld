@@ -19,7 +19,8 @@ OS_HEAP_SIZE = 0x100;
 MEMORY
 {
   RAM     (xrw)    : ORIGIN = 0x20000000,   LENGTH = 8K
-  FLASH   (rx)     : ORIGIN = 0x8000000,    LENGTH = 64K
+  FLASH   (rx)     : ORIGIN = 0x8000000,    LENGTH = 63K
+  STORAGE (rw)     : ORIGIN = 0x800fc00,    LENGTH = 1K
 }
 
 /* Sections */
@@ -152,6 +153,14 @@ SECTIONS
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
   } >RAM
+
+  .storage :
+  {
+    . = ALIGN(4);
+    PROVIDE(__storage_start = .);
+    *(.storage)
+    PROVIDE(__storage_end = .);
+  } > STORAGE
 
   /* Remove information from the compiler libraries */
   /DISCARD/ :
