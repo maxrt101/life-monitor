@@ -5,13 +5,14 @@ KEY_SIZE = 16
 
 
 class Command(Enum):
-    PING        = 0
-    CONFIRM     = 1
-    REJECT      = 2
-    REGISTER    = 3
-    STATUS      = 4
-    LOCATION    = 5
-    ALERT       = 6
+    PING              = 0
+    CONFIRM           = 1
+    REJECT            = 2
+    REGISTER          = 3
+    REGISTRATION_DATA = 4
+    STATUS            = 5
+    LOCATION          = 6
+    ALERT             = 7
 
 
 class TransportType(Enum):

@@ -16,6 +16,10 @@ class Packet:
     def __str__(self):
         return '{}: {}'.format(self.header, self.payload)
 
+    def __eq__(self, other):
+        # print(f'header={self.header == other.header} payload={self.payload == other.payload}')
+        return self.header == other.header and self.payload == other.payload
+
     @classmethod
     def reset_packet_id(cls):
         cls.__packet_id = 0

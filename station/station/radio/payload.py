@@ -41,6 +41,9 @@ class EmptyPayload(Payload):
     def __str__(self):
         return ''
 
+    def __eq__(self, other):
+        return type(other) is EmptyPayload
+
     def get_size(self) -> int:
         return 0
 
@@ -52,28 +55,6 @@ class EmptyPayload(Payload):
         return cls()
 
 
-class ConfirmPayload(Payload):
-    FORMAT = '>I'
-
-    def __init__(self, station_mac: int, key: bytes):
-        self.station_mac = station_mac
-        self.key = key
-
-    def __str__(self):
-        return f'station_mac=0x{self.station_mac:X} key={self.key}'
-
-    def get_size(self) -> int:
-        return struct.calcsize(self.FORMAT) + KEY_SIZE
-
-    def to_bytes(self) -> bytes:
-        return struct.pack(self.FORMAT, self.station_mac) + self.key
-
-    @classmethod
-    def from_bytes(cls, data: bytes):
-        sz = struct.calcsize(cls.FORMAT)
-        return cls(*struct.unpack(cls.FORMAT, data[:sz]), data[sz:])
-
-
 class RejectPayload(Payload):
     FORMAT = '>B'
 
@@ -82,6 +63,12 @@ class RejectPayload(Payload):
 
     def __str__(self):
         return f'reason={self.reason}'
+
+    def __eq__(self, other):
+        return (
+            type(other) is RejectPayload and
+            self.reason == other.reason
+        )
 
     def get_size(self) -> int:
         return struct.calcsize(self.FORMAT)
@@ -98,13 +85,22 @@ class RegisterPayload(Payload):
     FORMAT = '>BBBB'
 
     def __init__(self, hw_ver: int, sw_ver_major: int, sw_ver_minor: int, sw_ver_patch: int):
-        self.hw_ver = hw_ver
+        self.hw_ver       = hw_ver
         self.sw_ver_major = sw_ver_major
         self.sw_ver_minor = sw_ver_minor
         self.sw_ver_patch = sw_ver_patch
 
     def __str__(self):
         return f'ver={self.hw_ver}.{self.sw_ver_major}.{self.sw_ver_minor}.{self.sw_ver_patch}'
+
+    def __eq__(self, other):
+        return (
+            type(other) is RegisterPayload          and
+            self.hw_ver       == other.hw_ver       and
+            self.sw_ver_major == other.sw_ver_major and
+            self.sw_ver_minor == other.sw_ver_minor and
+            self.sw_ver_patch == other.sw_ver_patch
+        )
 
     def get_size(self) -> int:
         return struct.calcsize(self.FORMAT)
@@ -117,21 +113,61 @@ class RegisterPayload(Payload):
         return cls(*struct.unpack(cls.FORMAT, data))
 
 
+class RegistrationDataPayload(Payload):
+    FORMAT = '>I'
+
+    def __init__(self, station_mac: int, net_key: bytes):
+        self.station_mac = station_mac
+        self.net_key     = net_key
+
+    def __str__(self):
+        return f'station_mac=0x{self.station_mac:X} net_key={self.net_key}'
+
+    def __eq__(self, other):
+        return (
+            type(other) is RegistrationDataPayload and
+            self.station_mac == other.station_mac  and
+            self.net_key     == other.net_key
+        )
+
+    def get_size(self) -> int:
+        return struct.calcsize(self.FORMAT) + KEY_SIZE
+
+    def to_bytes(self) -> bytes:
+        return struct.pack(self.FORMAT, self.station_mac) + self.net_key
+
+    @classmethod
+    def from_bytes(cls, data: bytes):
+        sz = struct.calcsize(cls.FORMAT)
+        return cls(*struct.unpack(cls.FORMAT, data[:sz]), data[sz:])
+
+
 class StatusPayload(Payload):
     FORMAT = '>BBBbBB'
 
     def __init__(self, flags: int, reset_reason: ResetReason | int, reset_count: int, cpu_temp: int, bpm: int, avg_bpm: int):
         assert_raise(validate_enum(ResetReason, reset_reason), ValueError(f'Invalid reset reason {reset_reason}'))
 
-        self.flags = flags
+        self.flags        = flags
         self.reset_reason = reset_reason if type(reset_reason) is ResetReason else ResetReason(reset_reason)
-        self.reset_count = reset_count
-        self.cpu_temp = cpu_temp
-        self.bpm = bpm
-        self.avg_bpm = avg_bpm
+        self.reset_count  = reset_count
+        self.cpu_temp     = cpu_temp
+        self.bpm          = bpm
+        self.avg_bpm      = avg_bpm
 
     def __str__(self):
         return f'flags={self.flags} reset=({self.reset_reason.name} {self.reset_count}) cpu={self.cpu_temp} bpm=({self.bpm} {self.avg_bpm})'
+
+    def __eq__(self, other):
+        return (
+            type(other) is StatusPayload            and
+            self.flags        == other.flags        and
+            self.reset_reason == other.reset_reason and
+            self.reset_count  == other.reset_count  and
+            self.cpu_temp     == other.cpu_temp     and
+            self.bpm          == other.bpm          and
+            self.avg_bpm      == other.avg_bpm
+        )
 
     def get_size(self) -> int:
         return struct.calcsize(self.FORMAT)
@@ -149,13 +185,22 @@ class LocationPayload(Payload):
     VAL_SIZE = 14
 
     def __init__(self, lat_dir: str, lat: str, long_dir: str, long: str):
-        self.lat_dir = lat_dir
-        self.lat = lat
+        self.lat_dir  = lat_dir
+        self.lat      = lat
         self.long_dir = long_dir
-        self.long = long
+        self.long     = long
 
     def __str__(self):
         return f'{self.lat_dir} {self.lat} {self.long_dir} {self.long}'
+
+    def __eq__(self, other):
+        return (
+            type(other) is LocationPayload  and
+            self.lat_dir  == other.lat_dir  and
+            self.lat      == other.lat      and
+            self.long_dir == other.long_dir and
+            self.long     == other.long
+        )
 
     def get_size(self) -> int:
         return (self.DIR_SIZE + self.VAL_SIZE) * 2
@@ -192,21 +237,28 @@ class AlertPayload(Payload):
     def __str__(self):
         return f'trigger={self.trigger.name}'
 
+    def __eq__(self, other):
+        return (
+            type(other) is AlertPayload and
+            self.trigger.value == other.trigger.value
+        )
+
     def get_size(self) -> int:
         return struct.calcsize(self.FORMAT)
 
     def to_bytes(self) -> bytes:
-        return struct.pack(self.FORMAT, self.trigger)
+        return struct.pack(self.FORMAT, self.trigger.value)
 
     @classmethod
     def from_bytes(cls, data: bytes):
         return cls(*struct.unpack(cls.FORMAT, data))
 
 
-Payload.register_handler(Command.PING,      EmptyPayload)
-Payload.register_handler(Command.CONFIRM,   ConfirmPayload)
-Payload.register_handler(Command.REJECT,    RejectPayload)
-Payload.register_handler(Command.REGISTER,  RegisterPayload)
-Payload.register_handler(Command.STATUS,    StatusPayload)
-Payload.register_handler(Command.LOCATION,  LocationPayload)
-Payload.register_handler(Command.ALERT,     AlertPayload)
+Payload.register_handler(Command.PING,              EmptyPayload)
+Payload.register_handler(Command.CONFIRM,           EmptyPayload)
+Payload.register_handler(Command.REJECT,            RejectPayload)
+Payload.register_handler(Command.REGISTER,          RegisterPayload)
+Payload.register_handler(Command.REGISTRATION_DATA, RegistrationDataPayload)
+Payload.register_handler(Command.STATUS,            StatusPayload)
+Payload.register_handler(Command.LOCATION,          LocationPayload)
+Payload.register_handler(Command.ALERT,             AlertPayload)

@@ -1,5 +1,5 @@
 from .fs import form_path
-from .str import escape, unescape, bytes_to_str, parse_int
+from .str import escape, unescape, bytes_to_str, parse_int, hexdump
 from .ansi import *
 from .logger import logger
 

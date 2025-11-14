@@ -1,1 +1,3 @@
 setuptools~=80.9.0
+peewee
+flask

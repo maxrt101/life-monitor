@@ -29,3 +29,20 @@ def parse_int(s: str) -> int:
         return int(s)
     except ValueError:
         return int(s, 16)
+
+
+def hexdump(data: bytes):
+    offset = 0
+
+    print(f'0x{offset:08X}: ', end='')
+    while offset < len(data):
+        print(f'{data[offset]:02x} ', end='')
+
+        if (offset + 1) % 16 == 0:
+            print()
+            if offset + 1 != len(data):
+                print(f'0x{offset:08X}: ', end='')
+
+        offset += 1
+
+    print()
