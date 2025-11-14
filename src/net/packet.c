@@ -32,14 +32,15 @@
 #if USE_NET_PACKET_DUMP
 __STATIC_INLINE const char * net_cmd2str(net_cmd_t cmd) {
   switch (cmd) {
-    case NET_CMD_PING:     return "PING";
-    case NET_CMD_CONFIRM:  return "CONFIRM";
-    case NET_CMD_REJECT:   return "REJECT";
-    case NET_CMD_REGISTER: return "REGISTER";
-    case NET_CMD_STATUS:   return "STATUS";
-    case NET_CMD_LOCATION: return "LOCATION";
-    case NET_CMD_ALERT:    return "ALERT";
-    default:               return "?";
+    case NET_CMD_PING:              return "PING";
+    case NET_CMD_CONFIRM:           return "CONFIRM";
+    case NET_CMD_REJECT:            return "REJECT";
+    case NET_CMD_REGISTER:          return "REGISTER";
+    case NET_CMD_REGISTRATION_DATA: return "REGISTRATION_DATA";
+    case NET_CMD_STATUS:            return "STATUS";
+    case NET_CMD_LOCATION:          return "LOCATION";
+    case NET_CMD_ALERT:             return "ALERT";
+    default:                        return "?";
   }
 }
 
@@ -101,6 +102,9 @@ error_t net_packet_init(net_t * net, net_packet_t * packet, net_packet_cfg_t * c
       break;
     case NET_CMD_REGISTER:
       packet->size = sizeof(net_register_payload_t);
+      break;
+    case NET_CMD_REGISTRATION_DATA:
+      packet->size = sizeof(net_registration_data_t);
       break;
     case NET_CMD_STATUS:
       packet->size = sizeof(net_status_payload_t);
@@ -216,10 +220,6 @@ error_t net_packet_dump(net_packet_t * packet) {
     case NET_CMD_PING:
       break;
     case NET_CMD_CONFIRM:
-      log_printf("station_mac=0x%X key=", packet->payload.confirm.reg.station_mac);
-      for (uint8_t i = 0; i < NET_KEY_SIZE; ++i) {
-        log_printf("%02x ", packet->payload.confirm.reg.key[i]);
-      }
       break;
     case NET_CMD_REJECT:
       log_printf("reason=%d", packet->payload.reject.reason);
@@ -231,6 +231,12 @@ error_t net_packet_dump(net_packet_t * packet) {
         packet->payload.reg.sw_version_minor,
         packet->payload.reg.sw_version_patch
       );
+      break;
+    case NET_CMD_REGISTRATION_DATA:
+      log_printf("station_mac=0x%X key=", packet->payload.reg_data.station_mac);
+      for (uint8_t i = 0; i < NET_KEY_SIZE; ++i) {
+        log_printf("%02x ", packet->payload.reg_data.key[i]);
+      }
       break;
     case NET_CMD_STATUS:
       log_printf("flags=%d reset=(%s %d) cpu=%d bpm=(%d %d)",

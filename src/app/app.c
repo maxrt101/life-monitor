@@ -224,11 +224,15 @@ error_t app_register(app_t * app) {
     reg.payload.reg.sw_version_minor = PROJECT_VERSION_SW_MINOR;
     reg.payload.reg.sw_version_patch = PROJECT_VERSION_SW_PATCH;
 
-    net_packet_t confirm = {0};
+    net_packet_t reg_data = {0};
 
-    if (net_send(&app->net, &reg, &confirm, NET_REPEATS) == E_OK) {
-      memcpy(app->net.key, confirm.payload.confirm.reg.key, NET_KEY_SIZE);
-      app->net.station_mac.value = confirm.payload.confirm.reg.station_mac.value;
+    if (net_send(&app->net, &reg, &reg_data, NET_REPEATS) == E_OK) {
+      if (reg_data.cmd != NET_CMD_REGISTRATION_DATA) {
+        continue;
+      }
+
+      memcpy(app->net.key, reg_data.payload.reg_data.key, NET_KEY_SIZE);
+      app->net.station_mac.value = reg_data.payload.reg_data.station_mac.value;
 
       net_packet_t ping = {0};
 
@@ -238,11 +242,11 @@ error_t app_register(app_t * app) {
          .target.value = 0,
       }));
 
-      if (net_send(&app->net, &ping, &confirm, NET_REPEATS) == E_OK && confirm.cmd == NET_CMD_CONFIRM) {
+      if (net_send(&app->net, &ping, &reg_data, NET_REPEATS) == E_OK && reg_data.cmd == NET_CMD_CONFIRM) {
         log_info("Registered to 0x%x", app->net.station_mac.value);
 
-        memcpy(app->storage.key, confirm.payload.confirm.reg.key, NET_KEY_SIZE);
-        app->storage.station_mac.value = confirm.payload.confirm.reg.station_mac.value;
+        memcpy(app->storage.key, reg_data.payload.reg_data.key, NET_KEY_SIZE);
+        app->storage.station_mac.value = reg_data.payload.reg_data.station_mac.value;
         storage_write(&app->storage);
 
         break;

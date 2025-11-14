@@ -36,13 +36,14 @@ extern "C" {
  * Network Command
  */
 typedef __PACKED_ENUM {
-  NET_CMD_PING      = 0,
-  NET_CMD_CONFIRM   = 1,
-  NET_CMD_REJECT    = 2,
-  NET_CMD_REGISTER  = 3,
-  NET_CMD_STATUS    = 4,
-  NET_CMD_LOCATION  = 5,
-  NET_CMD_ALERT     = 6,
+  NET_CMD_PING              = 0,
+  NET_CMD_CONFIRM           = 1,
+  NET_CMD_REJECT            = 2,
+  NET_CMD_REGISTER          = 3,
+  NET_CMD_REGISTRATION_DATA = 4,
+  NET_CMD_STATUS            = 5,
+  NET_CMD_LOCATION          = 6,
+  NET_CMD_ALERT             = 7,
 } net_cmd_t;
 
 /**

@@ -32,12 +32,7 @@ extern "C" {
 /* Types ==================================================================== */
 /** NET_CMD_CONFIRM Payload */
 typedef __PACKED_STRUCT {
-  __PACKED_UNION {
-    struct {
-      net_mac_t station_mac;
-      net_key_t key;
-    } reg;
-  };
+  // ...
 } net_confirm_payload_t;
 
 /** NET_CMD_REJECT Payload */
@@ -52,6 +47,12 @@ typedef __PACKED_STRUCT {
   uint8_t sw_version_minor;
   uint8_t sw_version_patch;
 } net_register_payload_t;
+
+/** NET_CMD_REGISTRATION_DATA Payload */
+typedef __PACKED_STRUCT {
+    net_mac_t station_mac;
+    net_key_t key;
+} net_registration_data_t;
 
 /** NET_CMD_STATUS Payload */
 typedef __PACKED_STRUCT {
@@ -95,13 +96,14 @@ typedef __PACKED_STRUCT {
 
   /** Packet payload union */
   __PACKED_UNION {
-    net_confirm_payload_t  confirm;
-    net_reject_payload_t   reject;
-    net_register_payload_t reg;
-    net_status_payload_t   status;
-    net_location_payload_t location;
-    net_alert_payload_t    alert;
-    uint8_t                raw[0];
+    net_confirm_payload_t   confirm;
+    net_reject_payload_t    reject;
+    net_register_payload_t  reg;
+    net_registration_data_t reg_data;
+    net_status_payload_t    status;
+    net_location_payload_t  location;
+    net_alert_payload_t     alert;
+    uint8_t                 raw[0];
   } payload;
 } net_packet_t;
 

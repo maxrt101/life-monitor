@@ -188,14 +188,14 @@ void project_main(void) {
 
   log_printf("Packet (%d):\r\n", pkt.size + NET_HEADER_SIZE);
   net_packet_dump(&pkt);
-  hexdump((uint8_t *) &pkt, sizeof(pkt));
+  hexdump((uint8_t *) &pkt, pkt.size + NET_HEADER_SIZE);
 
   net_frame_t frame = {0};
 
   net_packet_serialize(&device.app.net, &frame, &pkt);
 
   log_printf("Serialized (%d):\r\n", frame.size);
-  hexdump((uint8_t *) &frame, sizeof(frame));
+  hexdump((uint8_t *) &frame, frame.size);
 
   net_packet_t dpkt = {0};
 
@@ -203,7 +203,7 @@ void project_main(void) {
 
   log_printf("Deserialized (%d):\r\n", dpkt.size + NET_HEADER_SIZE);
   net_packet_dump(&dpkt);
-  hexdump((uint8_t *) &dpkt, sizeof(dpkt));
+  hexdump((uint8_t *) &dpkt, dpkt.size + NET_HEADER_SIZE);
 
 
   log_printf("Station test:\r\n");
@@ -213,13 +213,15 @@ void project_main(void) {
     .size = 24
   };
 
+  hexdump(station_frame.data, station_frame.size);
+
   net_packet_t station_packet = {0};
 
   net_packet_deserialize(&device.app.net, &station_frame, &station_packet);
 
   log_printf("Deserialized Station Packet (%d):\r\n", station_packet.size + NET_HEADER_SIZE);
   net_packet_dump(&station_packet);
-  hexdump((uint8_t *) &station_packet, sizeof(station_packet));
+  hexdump((uint8_t *) &station_packet, station_packet.size + NET_HEADER_SIZE);
 
 #endif
 
