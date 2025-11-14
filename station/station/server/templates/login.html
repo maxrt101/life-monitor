@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <h2>LOGIN REQUIRED</h2>
+    <p>Please provide credentials to access the command station.</p>
+
+    <form action="{{ url_for('login') }}" method="POST">
+        <fieldset>
+            <legend>Authentication</legend>
+            <div class="form-group">
+                <label for="username">Operator:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Passcode:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">AUTHENTICATE</button>
+        </fieldset>
+    </form>
+{% endblock %}

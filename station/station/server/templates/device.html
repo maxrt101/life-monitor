@@ -1,0 +1,299 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <h2>DEVICE: {{ device.name }} (MAC: {{ device.mac }})</h2>
+    <p>Firmware Version: {{ device.version }}</p>
+    <hr>
+
+    <div class="terminal-card">
+        <header>Current Status</header>
+        <h3 class="status-{{ status }}">{{ status }}: {{ message }}</h3>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem;">
+
+        <!-- Live Map -->
+        <div class="terminal-card" style="flex: 1; min-width: 300px;">
+            <header>Location Map (Leaflet.js)</header>
+            <div id="map" style="height: 400px; background-color: #333;">
+                <!-- Map will be initialized here by script -->
+            </div>
+        </div>
+
+        <!-- Pulse EKG Animation -->
+        <div class="terminal-card" style="flex: 1; min-width: 300px;">
+            <header>Vitals</header>
+            <div class="vitals-container">
+                <!-- Text overlay for BPM -->
+                <div id="vitals-bpm-text">-- BPM</div>
+
+                <!-- NEW: Replaced SVG with Canvas -->
+                <canvas id="ekg-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+    <h3>Alert History</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Trigger Event</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alert in alert_logs %}
+            <tr>
+                <!-- Use log.timestamp -->
+                <td>{{ alert.log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td>{{ alert.trigger_text }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="2">No alerts recorded for this device.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <hr>
+    <h3>Recent Status Reports</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>BPM</th>
+                <th>Avg BPM</th>
+                <th>Sensor Flags</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for status in status_logs %}
+            <tr>
+                <!-- Use log.timestamp -->
+                <td>{{ status.log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td>{{ status.log.bpm }}</td>
+                <td>{{ status.log.avg_bpm }}</td>
+                <!-- Use flags_text -->
+                <td>{{ status.flags_text }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4">No status reports for this device.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // --- 1. Initialize Leaflet Map ---
+            // Lviv coordinates as a fallback
+            const defaultCenter = [49.8397, 24.0297];
+            let map;
+            try {
+                 // Check if map container already has a map
+                if (document.getElementById('map')._leaflet_id) {
+                    return; // Already initialized, exit
+                }
+                map = L.map('map').setView(defaultCenter, 13);
+            } catch(e) {
+                console.error("Error initializing Leaflet map:", e);
+                return; // Stop script if map fails
+            }
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Fetch location data
+            fetch('/api/device/{{ device.mac }}/locations')
+                .then(response => response.json())
+                .then(locations => {
+                    if (locations.length === 0) {
+                        L.marker(defaultCenter).addTo(map)
+                            .bindPopup('No location data available.').openPopup();
+                        return;
+                    }
+
+                    // Create array of [lat, lon]
+                    const latLngs = locations.map(loc => [loc.lat, loc.lon]);
+
+                    // Add the path
+                    const polyline = L.polyline(latLngs, { color: 'var(--error-color)' }).addTo(map);
+
+                    // --- NEW: Add a small circle for *each* location point ---
+                    latLngs.forEach((latLng, index) => {
+                        L.circleMarker(latLng, {
+                            radius: 3,
+                            color: 'var(--primary-color)',
+                            fillColor: 'var(--primary-color)',
+                            fillOpacity: 0.8
+                        }).addTo(map)
+                          .bindPopup(`Point ${index + 1}<br>${new Date(locations[index].ts).toLocaleString()}`);
+                    });
+                    // --- End new section ---
+
+
+                    // Add a marker at the *last* known location
+                    const lastLoc = latLngs[latLngs.length - 1];
+                    L.marker(lastLoc).addTo(map)
+                        .bindPopup(`<b>{{ device.name }}</b><br>Last seen: ${new Date(locations[locations.length - 1].ts).toLocaleString()}`)
+                        .openPopup();
+
+                    // Zoom map to fit the path
+                    map.fitBounds(polyline.getBounds());
+                })
+                .catch(err => {
+                    console.error('Error fetching locations:', err);
+                    L.marker(defaultCenter).addTo(map)
+                        .bindPopup('Error loading location data.').openPopup();
+                });
+
+            // --- 2. Initialize Pulse EKG Animation (CANVAS VERSION) ---
+            const canvas = document.getElementById('ekg-canvas');
+            const bpmText = document.getElementById('vitals-bpm-text');
+
+            if (!canvas || !bpmText) {
+                console.error("Vitals elements not found!");
+                return;
+            }
+
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas size to match its container
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            const centerY = canvas.height / 2;
+
+            // --- EKG Path Data ---
+            // Format: [x, y_offset] (y+ is down, y- is up)
+            // UPDATED: Doubled all Y values to make it twice as high
+            const pathData = [
+                [0, 0],   // Start
+                [35, 0],  // Flatline
+                [38, -10], // P-wave (up) [was -5]
+                [40, 0],  // baseline
+                [42, 4],  // Q-wave (down) [was 2]
+                [45, -50], // R-wave (big up) [was -25]
+                [48, 6],  // S-wave (down) [was 3]
+                [50, 0],  // baseline
+                [58, -16], // T-wave (up) [was -8]
+                [65, 0],  // baseline
+                [100, 0] // Flatline to end
+            ];
+            const pathWidth = 100; // The total x-width of the pathData above
+
+            let currentBpm = 0;
+            let xOffset = 0;
+            let lastTimestamp = 0;
+
+            // This function draws one beat at a specific x offset
+            function drawBeat(startX) {
+                ctx.beginPath();
+                // Start at the beginning [0, 0]
+                ctx.moveTo(startX + pathData[0][0], centerY + pathData[0][1]);
+
+                for (let i = 1; i < pathData.length; i++) {
+                    const [x, y] = pathData[i];
+                    ctx.lineTo(startX + x, centerY + y);
+                }
+                ctx.stroke();
+            }
+
+            // This function draws the "flatline"
+            function drawFlatline() {
+                ctx.beginPath();
+                ctx.moveTo(0, centerY);
+                ctx.lineTo(canvas.width, centerY);
+                ctx.stroke();
+            }
+
+            // --- The Animation Loop ---
+            function animate(timestamp) {
+                // Calculate time delta for smooth, consistent speed
+                if (!lastTimestamp) lastTimestamp = timestamp;
+                const deltaTime = (timestamp - lastTimestamp) / 1000; // in seconds
+                lastTimestamp = timestamp;
+
+                // Clear the canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                if (currentBpm > 0) {
+                    // Set style for a beat
+                    ctx.strokeStyle = 'var(--primary-color)';
+                    ctx.lineWidth = 2;
+
+                    // --- Calculate Speed ---
+                    // beatsPerSecond = currentBpm / 60
+                    // pixelsPerSecond = pathWidth * beatsPerSecond
+                    // pixelsToMove = pixelsPerSecond * deltaTime
+                    const pixelsToMove = (pathWidth * (currentBpm / 60)) * deltaTime;
+
+                    xOffset -= pixelsToMove;
+
+                    // If we've scrolled one full beat, reset
+                    if (xOffset < -pathWidth) {
+                        xOffset += pathWidth;
+                    }
+
+                    // Tile the beat across the screen
+                    const startX = Math.floor(xOffset);
+                    const tileCount = Math.ceil(canvas.width / pathWidth) + 1;
+
+                    for (let i = 0; i < tileCount; i++) {
+                        drawBeat(startX + i * pathWidth);
+                    }
+
+                } else {
+                    // Draw flatline
+                    ctx.strokeStyle = (bpmText.textContent === 'NO DATA') ? 'var(--warning-color)' : 'var(--error-color)';
+                    ctx.lineWidth = 2;
+                    drawFlatline();
+                }
+
+                // Request the next frame
+                requestAnimationFrame(animate);
+            }
+
+            // --- Data Fetching ---
+            let pulseInterval = null;
+
+            function updatePulse() {
+                fetch('/api/device/{{ device.mac }}/latest_pulse')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.bpm !== undefined) {
+                            currentBpm = data.bpm;
+
+                            if (currentBpm > 0) {
+                                bpmText.textContent = `${currentBpm} BPM`;
+                                bpmText.style.color = 'var(--font-color)';
+                            } else {
+                                bpmText.textContent = 'NO PULSE';
+                                bpmText.style.color = 'var(--error-color)';
+                            }
+                        } else {
+                            throw new Error('No data');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error fetching pulse:', err);
+                        currentBpm = 0; // Flatline on error
+                        bpmText.textContent = 'NO DATA';
+                        bpmText.style.color = 'var(--warning-color)';
+                    });
+            }
+
+            // Clear previous interval if one exists
+            if (pulseInterval) {
+                clearInterval(pulseInterval);
+            }
+
+            // Start everything
+            updatePulse(); // Call once immediately
+            pulseInterval = setInterval(updatePulse, 5000); // Fetch data every 5s
+            requestAnimationFrame(animate); // Start the animation loop
+        });
+    </script>
+
+{% endblock %}
