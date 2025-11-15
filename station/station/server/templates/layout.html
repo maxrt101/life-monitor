@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale: 1.0">
-    <link rel="stylesheet" href="https://unpkg.com/terminal.css@0.7.2/dist/terminal.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/terminal.css@0.7.4/dist/terminal.min.css" />
 
     <!-- Leaflet.js CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -14,35 +14,73 @@
     <style>
         /* Base Overrides & Color Theme */
         body {
-            background-color: #1a1a1a;
-            --primary-color: #00C832;   /* Darker Green */
-            --success-color: #00C832;   /* Darker Green */
-            --warning-color: #FFBF00;   /* Amber */
-            --error-color: #FF4136;     /* Clearer Red */
+            --background-color: #1a1a1a;
+            --primary-color: #00C832;
+            --secondary-color: #8c8c8c;
+            --tertiary-color: #6c6c6c;
+
+            --card-background: #018021b8;
+
+            --success-color: #00C832;
+            --warning-color: #FFBF00;
+            --error-color: #FF4136;
 
             --font-color: #e0e0e0;
+            --invert-font-color: #222225;
+
+            background-color: var(--background-color);
             color: var(--font-color);
         }
+
         /* Fix for typed text in forms */
         input, select, textarea {
             color: var(--secondary-color, grey);
         }
+
         ::placeholder {
             color: #555 !important;
         }
+
         /* Add padding to form buttons */
         .terminal-card form button[type="submit"] {
             margin-top: 1rem;
         }
-        hr {
-            margin-top: 20px;
-            margin-bottom: 20px;
+
+        .terminal-card>header {
+            background-color: var(--card-background);
+            color: var(--font-color);
         }
 
+        hr {
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        /* terminal.min.css for some reason doesn't have styles for select. These are just copied from devtools in examples */
+        select {
+            border: 1px var(--input-style) var(--font-color);
+            width: 100%;
+            padding: .7em .5em;
+            font-size: 1em;
+            font-family: var(--font-stack);
+            color: var(--font-color);
+            border-radius: 0;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-color: var(--background-color);
+            background-image: url(data:image/svg+xml;utf8,<svg fill='currentColor' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>);
+            background-repeat: no-repeat;
+            background-position: right .5em bottom .5em;
+        }
+
+        .debug-element {
+            margin-bottom: 1rem;
+        }
 
         /* Other styles */
         .container {
-            max-width: 1000px;
+            width: 1000px;
+            min-height: 100%;
         }
 
         .navbar {
@@ -50,9 +88,34 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--primary-color);
-            padding-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            padding-top: 0.5rem;
         }
 
+        body {
+            height: 100%;
+        }
+
+        .footer-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--secondary-color);
+        }
+
+        footer {
+            width: 1000px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+
+            max-width: var(--page-width);
+            margin: 0 auto;
+            padding: 0 calc(var(--global-space) * 2);
+
+            background-color: var(--background-color);
+        }
 
         /* Status styles */
         .status-OK {
@@ -119,8 +182,8 @@
         #debug-menu {
             position: fixed;
             top: 0;
-            right: -350px; /* Start off-screen */
-            width: 330px;
+            right: -400px; /* Start off-screen */
+            width: 400px;
             height: 100vh;
             background: #252525;
             border-left: 1px solid var(--primary-color);
@@ -149,13 +212,14 @@
 </head>
 <body class="terminal">
     <div class="container">
-
         <header class="navbar">
-            <h1><a href="{{ url_for('dashboard') }}">LIFEMONITOR</a></h1>
+            <h2 style="height: 1rem; margin: auto 0;">
+                <a href="{{ url_for('dashboard') }}">LIFEMONITOR</a>
+            </h2>
             {% if session['username'] %}
                 <div>
                     Logged in as: <strong>{{ session['username'] }}</strong>
-                    <a href="{{ url_for('logout') }}" class="btn btn-error">LOGOUT</a>
+                    <a href="{{ url_for('logout') }}" class="btn btn-error" style="padding-top: 0.3rem; padding-bottom: 0.3rem;">LOGOUT</a>
                 </div>
             {% endif %}
         </header>
@@ -173,11 +237,22 @@
 
             <!-- This is where other templates inject their content -->
             {% block content %}{% endblock %}
-        </main>
 
+        </main>
     </div>
 
-    <!-- Leaflet.js JS (Must be after the container) -->
+    <footer>
+        <div class="footer-container" style="border-top: 1px solid var(--secondary-color);">
+            <div style="display: flex;">
+                <img src="/favicon.ico" alt="Icon" style="height: 1.5rem; width: 1.5rem; ">
+                <p style="padding-left: 0.5rem; display: block; margin: auto auto;">LifeMonitor Project </p>
+            </div>
+            <p style="display: block; margin: auto 0;">© maxrt 2025</p>
+        </div>
+    </footer>
+
+
+    <!-- Leaflet.js (Must be after the container) -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>
@@ -186,74 +261,144 @@
     {% if session['username'] %}
     <button id="debug-toggle" class="btn btn-default">DEBUG</button>
     <div id="debug-menu">
-        <button id="debug-close" class="btn btn-error" style="width: 100%;">CLOSE</button>
+        <button id="debug-close" class="btn btn-error debug-element" style="width: 100%;">CLOSE</button>
 
         <!-- Add User -->
-        <h4>Add User</h4>
-        <form action="{{ url_for('debug_add_user') }}" method="POST">
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit" class="btn btn-primary" style="width:100%;">Create User</button>
+        <form action="{{ url_for('debug_add_user') }}" method="POST" class="debug-element">
+            <fieldset>
+                <legend>Add User</legend>
+
+                <div class="form-group">
+                    <input type="text" name="username" id="username" placeholder="Username" required>
+                </div>
+
+                <div class="form-group">
+                    <input type="password" name="password" placeholder="Password" required>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" style="width:100%;">Create User</button>
+                </div>
+            </fieldset>
         </form>
 
         <!-- Add Device -->
-        <h4>Add Device</h4>
-        <form action="{{ url_for('debug_add_device') }}" method="POST">
-            <input type="text" name="mac" placeholder="MAC (e.g., 0x12345678)" required>
-            <input type="text" name="name" placeholder="Name (e.g., Test Device 1)" required>
-            <input type="text" name="version" placeholder="Version (e.g., 1.2.3.4)" required>
-            <button type="submit" class="btn btn-primary" style="width:100%;">Create Device</button>
+        <form action="{{ url_for('debug_add_device') }}" method="POST" class="debug-element">
+            <fieldset>
+                <legend>Add Device</legend>
+
+                <div class="form-group">
+                    <input type="text" name="mac" placeholder="MAC (e.g., 0x12345678)" required>
+                </div>
+
+                <div class="form-group">
+                    <input type="text" name="name" placeholder="Name (e.g., Test Device 1)" required>
+                </div>
+
+                <div class="form-group">
+                    <input type="text" name="version" placeholder="Version (e.g., 1.2.3.4)" required>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" style="width:100%;">Create Device</button>
+                </div>
+            </fieldset>
         </form>
 
         <hr>
 
         <!-- Device Selector for actions below -->
+        <form action="#">
+            <fieldset>
+                <legend>Select Device MAC</legend>
+                <div class="form-group">
+                    <select id="debug_device_mac" name="debug_device_mac">
+                        <option value="">-- Select Device --</option>
+                        {% for dev in g.all_devices %}
+                            <option value="{{ dev.mac }}">{{ dev.name }} ({{ dev.mac }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </fieldset>
+        </form>
+
         <h4>Add Data for Device</h4>
-        <label for="debug_device_mac">Select Device MAC</label>
-        <select id="debug_device_mac_selector">
-            <option value="">-- Select Device --</option>
-            {% for dev in g.all_devices %}
-            <option value="{{ dev.mac }}">{{ dev.name }} ({{ dev.mac }})</option>
-            {% endfor %}
-        </select>
 
         <hr>
 
         <!-- Add Status -->
-        <form action="{{ url_for('debug_add_status') }}" method="POST">
-            <h4>Add Status</h4>
-            <input type="hidden" name="device_mac" class="debug-mac-input">
-            <input type="number" name="bpm" placeholder="BPM (e.g., 70)" required>
-            <input type="number" name="avg_bpm" placeholder="Avg BPM (e.g., 72)" required>
-            <input type="number" name="flags" placeholder="Flags (e.g., 0)" required>
-            <button type="submit" class="btn btn-primary" style="width:100%;">Add Status</button>
+        <form action="{{ url_for('debug_add_status') }}" method="POST" class="debug-element">
+            <fieldset>
+                <legend>Add Status</legend>
+
+                <div class="form-group">
+                    <input type="hidden" name="device_mac" class="debug-mac-input">
+                </div>
+
+                <div class="form-group">
+                    <input type="number" name="bpm" placeholder="BPM (e.g., 70)" required>
+                </div>
+
+                <div class="form-group">
+                    <input type="number" name="avg_bpm" placeholder="Avg BPM (e.g., 72)" required>
+                </div>
+
+                <div class="form-group">
+                    <input type="number" name="flags" placeholder="Flags (e.g., 0)" required>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" style="width:100%;">Add Status</button>
+                </div>
+            </fieldset>
         </form>
 
         <!-- Add Location -->
-        <form action="{{ url_for('debug_add_location') }}" method="POST">
-            <h4>Add Location</h4>
-            <input type="hidden" name="device_mac" class="debug-mac-input">
-            <div class="form-group-inline">
-                <input type="text" name="latitude" placeholder="Lat (e.g., 49.83)" required>
-                <select name="latitude_direction" style="width: 15%;">
-                    <option value="N">N</option><option value="S">S</option>
-                </select>
-            </div>
-            <div class="form-group-inline">
-                <input type="text" name="longitude" placeholder="Lon (e.g., 24.02)" required>
-                <select name="longitude_direction" style="width: 15%;">
-                    <option value="E">E</option><option value="W">W</option>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary" style="width:100%;">Add Location</button>
+        <form action="{{ url_for('debug_add_location') }}" method="POST" class="debug-element">
+            <fieldset>
+                <legend>Add Location</legend>
+
+                <div class="form-group">
+                    <input type="hidden" name="device_mac" class="debug-mac-input">
+                </div>
+
+                <div class="form-group form-group-inline">
+                    <input type="text" name="latitude" placeholder="Lat (e.g., 49.83)" required>
+                    <select name="latitude_direction" style="width: 15%;">
+                        <option value="N">N</option><option value="S">S</option>
+                    </select>
+                </div>
+
+                <div class="form-group form-group-inline">
+                    <input type="text" name="longitude" placeholder="Lon (e.g., 24.02)" required>
+                    <select name="longitude_direction" style="width: 15%;">
+                        <option value="E">E</option><option value="W">W</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" style="width:100%;">Add Location</button>
+                </div>
+            </fieldset>
         </form>
 
         <!-- Add Alert -->
         <form action="{{ url_for('debug_add_alert') }}" method="POST">
-            <h4>Add Alert</h4>
-            <input type="hidden" name="device_mac" class="debug-mac-input">
-            <input type="number" name="trigger" placeholder="Trigger Code (e.g., 1)" required>
-            <button type="submit" class="btn btn-error" style="width:100%;">Add Alert</button>
+            <fieldset>
+                <legend>Add Alert</legend>
+
+                <div class="form-group">
+                    <input type="hidden" name="device_mac" class="debug-mac-input">
+                </div>
+
+                <div class="form-group">
+                    <input type="number" name="trigger" placeholder="Trigger Code (e.g., 1)" required>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-error" style="width:100%;">Add Alert</button>
+                </div>
+            </fieldset>
         </form>
     </div>
 
@@ -275,7 +420,7 @@
         }
 
         // Sync Device MAC for debug forms
-        const deviceSelector = document.getElementById('debug_device_mac_selector');
+        const deviceSelector = document.getElementById('debug_device_mac');
         const macInputs = document.querySelectorAll('.debug-mac-input');
 
         if (deviceSelector && macInputs) {
