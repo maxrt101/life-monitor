@@ -2,8 +2,8 @@ from station.radio.header import Header
 from station.radio.payload import Payload, EmptyPayload
 from station.radio.types import Command, TransportType
 from station.radio import crc, crypt
-
 import struct
+
 
 class Packet:
     __packet_id = 0
@@ -17,7 +17,6 @@ class Packet:
         return '{}: {}'.format(self.header, self.payload)
 
     def __eq__(self, other):
-        # print(f'header={self.header == other.header} payload={self.payload == other.payload}')
         return self.header == other.header and self.payload == other.payload
 
     @classmethod
@@ -38,30 +37,13 @@ class Packet:
             key=key
         )
 
-    # @classmethod
-    # def create_ack(cls, command: Command, device_id: int, packet_id: int, key: bytes = None, **kwargs):
-    #     return cls(header=Header(
-    #         command, 0, packet_id, device_id),
-    #         payload=Payload.get_handler_for(command)(**kwargs),
-    #         key=key
-    #     )
-    #
-    # def ack(self, command: Command, **kwargs):
-    #     return Packet(header=Header(
-    #         command, 0, self.header.packet_id, self.header.device_id),
-    #         payload=Payload.get_handler_for(command)(**kwargs),
-    #         key=self.key
-    #     )
-    #
-    # def send(self, trx: Driver):
-    #     trx.send(self.to_bytes())
-
     @staticmethod
     def get_header_size():
         return Header.get_size()
 
     @classmethod
     def get_min_size(cls):
+        # FIXME: +2 bytes of salt?
         return cls.get_header_size() + crc.SIZE
 
     @classmethod

@@ -338,7 +338,7 @@ class RadioNetworkTestCase(unittest.TestCase):
             long_dir='E',
             long='02340.25276'
         ).to_bytes())
-#49.4397313 23.4025276
+        #49.4397313 23.4025276
         db.Device.create(
             mac=0xEBAC0C42,
             name='Test',

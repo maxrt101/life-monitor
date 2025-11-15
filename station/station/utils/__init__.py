@@ -1,5 +1,5 @@
 from .fs import form_path
-from .str import escape, unescape, bytes_to_str, parse_int, hexdump
+from .str import bytes_to_str, parse_int, hexdump
 from .ansi import *
 from .logger import logger
 
@@ -8,9 +8,12 @@ from enum import Enum
 import importlib.util
 import sys
 
+
+# Raises 'exc' if value is false
 def assert_raise(value: bool, exc: Exception):
     if not value:
         raise exc
+
 
 # Validates enum value using enum type
 def validate_enum(cls: Type[Enum], value: Any):
@@ -21,6 +24,8 @@ def validate_enum(cls: Type[Enum], value: Any):
 
     return v in set(item.value for item in cls)
 
+
+# Import module as 'module_name' from 'file_path'
 def import_from_path(module_name: str, file_path: str):
     spec = importlib.util.spec_from_file_location(module_name, file_path)
     module = importlib.util.module_from_spec(spec)

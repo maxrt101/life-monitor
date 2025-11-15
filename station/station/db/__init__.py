@@ -1,15 +1,18 @@
+from station.utils import logger
 from station.config import CONFIG_DB_FILE_PATH
 from werkzeug.security import generate_password_hash
 from peewee import *
 import datetime
 
 
-db = SqliteDatabase(CONFIG_DB_FILE_PATH)
+# Global database connection
+# Should be re-opened in threads
+conn = SqliteDatabase(CONFIG_DB_FILE_PATH)
 
 
 class BaseModel(Model):
     class Meta:
-        database = db
+        database = conn
 
 
 class User(BaseModel):
@@ -50,14 +53,17 @@ class Alert(BaseModel):
 
 
 def init():
-    db.connect()
-    db.create_tables([User, Device, Status, Location, Alert])
+    conn.connect()
+    conn.create_tables([User, Device, Status, Location, Alert])
 
+    # Unconditionally create 'admin' user
     if not User.select().where(User.username == 'admin').exists():
-        print("Creating default admin user...")
+        logger.info("Creating default admin user...")
         hashed_password = generate_password_hash('admin')
         User.create(username='admin', password_hash=hashed_password)
-        print("User 'admin' created with password 'password'")
+        logger.info("User 'admin' created with password 'password'")
+
 
 def deinit():
-    db.close()
+    if not conn.is_closed():
+        conn.close()

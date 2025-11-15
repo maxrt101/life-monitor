@@ -1,19 +1,19 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <h2>DEVICE STATUS DASHBOARD</h2>
+    <div style="display: flex; justify-content: space-between;">
+        <h2>DEVICE STATUS DASHBOARD</h2>
+        <h2 style="flex; color: var(--secondary-color, grey)">STATION: {{ station_mac }}</h2>
+    </div>
 
     <div class="terminal-card">
         <header>Register New Device</header>
         <form action="{{ url_for('register_device') }}" method="POST">
             <label for="name">Device Name:</label>
-            <input type="text" name="name" placeholder="e.g., Alpha 1" required>
+            <input type="text" name="name" placeholder="e.g., Test Device 1" required>
 
-            <label for="mac">Device MAC (Integer ID):</label>
-            <input type="number" name="mac" placeholder="e.g., 12345678" required>
-
-            <!-- <label for="version">Firmware Version:</label> -->
-            <!-- <input type="text" name="version" placeholder="e.g., v1.3" required> -->
+            <label for="mac">Device MAC (4-byte integer ID):</label>
+            <input type="number" name="mac" placeholder="e.g., 0x12345678" required>
 
             <button type="submit" class="btn btn-primary">Register</button>
         </form>
@@ -24,34 +24,30 @@
     <table>
         <thead>
             <tr>
-                <th>MAC ID</th>
+                <th>MAC</th>
                 <th>Name</th>
                 <th>Version</th>
                 <th>Status</th>
                 <th>Last Message</th>
-                <th style="width: 20%;">Actions</th> <!-- Added width for consistency -->
+                <th style="width: 20%;">Actions</th>
             </tr>
         </thead>
         <tbody>
             {% for device in devices %}
                 <tr>
-                    <td>{{ device.mac }}</td>
+                    <td>{{ device.mac_hex }}</td>
                     <td>{{ device.name }}</td>
                     <td>{{ device.version }}</td>
                     <td class="status-{{ device.status }}">
                         <strong>{{ device.status }}</strong>
                     </td>
                     <td>{{ device.message }}</td>
-                    <!-- UPDATED: Added flex: 1 to children for full width -->
-                    <td style="display: flex; gap: 0.5rem; padding: 0.5rem;">
-                        <!-- UPDATED: Matched padding/line-height to button -->
-                        <a href="{{ url_for('device_detail', device_mac=device.mac) }}" class="btn" style="flex: 1; text-align: center; margin: 0; display: block; padding-top: 0.75rem; padding-bottom: 0.75rem; line-height: 1;">View</a>
+                    <td style="display: flex; gap: 0.3rem; padding: 0.3rem;">
+                        <a href="{{ url_for('device_detail', device_mac=device.mac) }}" class="btn" style="flex: 1; text-align: center; margin: 0; display: block; line-height: 1; width: 50%;">View</a>
 
-                        <!-- NEW Remove Button Form -->
-                        <form action="{{ url_for('remove_device') }}" method="POST" style="margin: 0; flex: 1; display: flex;">
+                        <form action="{{ url_for('remove_device') }}" method="POST" style="margin: 0; flex: 1; display: flex; width: 50%;">
                             <input type="hidden" name="mac" value="{{ device.mac }}">
-                            <!-- UPDATED: width/flex 1 to fill form -->
-                            <button type="submit" class="btn btn-error" style="width: 100%; margin: 0; flex: 1;">Remove</button>
+                            <button type="submit" class="btn btn-error" style="width: 100%; margin: 0; flex: 1; padding-top: 0px; padding-bottom: 0px; ">Remove</button>
                         </form>
                     </td>
                 </tr>

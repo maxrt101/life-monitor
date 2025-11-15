@@ -1,4 +1,4 @@
-from station.utils import validate_enum, assert_raise, bytes_to_str
+from station.utils import validate_enum, assert_raise
 from station.radio.types import (
     KEY_SIZE,
     Command,
@@ -254,6 +254,7 @@ class AlertPayload(Payload):
         return cls(*struct.unpack(cls.FORMAT, data))
 
 
+# Register payload classes for serialization/deserialization to each command
 Payload.register_handler(Command.PING,              EmptyPayload)
 Payload.register_handler(Command.CONFIRM,           EmptyPayload)
 Payload.register_handler(Command.REJECT,            RejectPayload)

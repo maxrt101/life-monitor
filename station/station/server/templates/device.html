@@ -1,20 +1,20 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <h2>DEVICE: {{ device.name }} (MAC: {{ device.mac }})</h2>
+    <h2 style="margin-top: 10px;">DEVICE: {{ device.name }} (MAC: {{ device.mac_hex }})</h2>
     <p>Firmware Version: {{ device.version }}</p>
     <hr>
 
     <div class="terminal-card">
         <header>Current Status</header>
-        <h3 class="status-{{ status }}">{{ status }}: {{ message }}</h3>
+        <h3 class="status-{{ status }}">{{ device.status }}: {{ device.message }}</h3>
     </div>
 
     <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem;">
 
         <!-- Live Map -->
         <div class="terminal-card" style="flex: 1; min-width: 300px;">
-            <header>Location Map (Leaflet.js)</header>
+            <header>Location Map</header>
             <div id="map" style="height: 400px; background-color: #333;">
                 <!-- Map will be initialized here by script -->
             </div>
@@ -27,7 +27,7 @@
                 <!-- Text overlay for BPM -->
                 <div id="vitals-bpm-text">-- BPM</div>
 
-                <!-- NEW: Replaced SVG with Canvas -->
+                <!-- Canvas for EKG animation based on BPM -->
                 <canvas id="ekg-canvas"></canvas>
             </div>
         </div>
@@ -45,7 +45,6 @@
         <tbody>
             {% for alert in alert_logs %}
             <tr>
-                <!-- Use log.timestamp -->
                 <td>{{ alert.log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                 <td>{{ alert.trigger_text }}</td>
             </tr>
@@ -69,11 +68,9 @@
         <tbody>
             {% for status in status_logs %}
             <tr>
-                <!-- Use log.timestamp -->
                 <td>{{ status.log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                 <td>{{ status.log.bpm }}</td>
                 <td>{{ status.log.avg_bpm }}</td>
-                <!-- Use flags_text -->
                 <td>{{ status.flags_text }}</td>
             </tr>
             {% else %}
@@ -85,19 +82,21 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
-            // --- 1. Initialize Leaflet Map ---
+            // 1. Initialize Leaflet Map
             // Lviv coordinates as a fallback
             const defaultCenter = [49.8397, 24.0297];
             let map;
             try {
-                 // Check if map container already has a map
+                // Check if map container already has a map
                 if (document.getElementById('map')._leaflet_id) {
-                    return; // Already initialized, exit
+                    // Already initialized, exit
+                    return;
                 }
                 map = L.map('map').setView(defaultCenter, 13);
             } catch(e) {
                 console.error("Error initializing Leaflet map:", e);
-                return; // Stop script if map fails
+                // Stop script if map fails
+                return;
             }
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -120,7 +119,7 @@
                     // Add the path
                     const polyline = L.polyline(latLngs, { color: 'var(--error-color)' }).addTo(map);
 
-                    // --- NEW: Add a small circle for *each* location point ---
+                    // Add a small circle for each location point
                     latLngs.forEach((latLng, index) => {
                         L.circleMarker(latLng, {
                             radius: 3,
@@ -130,10 +129,9 @@
                         }).addTo(map)
                           .bindPopup(`Point ${index + 1}<br>${new Date(locations[index].ts).toLocaleString()}`);
                     });
-                    // --- End new section ---
 
 
-                    // Add a marker at the *last* known location
+                    // Add a marker at the last known location
                     const lastLoc = latLngs[latLngs.length - 1];
                     L.marker(lastLoc).addTo(map)
                         .bindPopup(`<b>{{ device.name }}</b><br>Last seen: ${new Date(locations[locations.length - 1].ts).toLocaleString()}`)
@@ -148,7 +146,7 @@
                         .bindPopup('Error loading location data.').openPopup();
                 });
 
-            // --- 2. Initialize Pulse EKG Animation (CANVAS VERSION) ---
+            // 2. Initialize Pulse EKG Animation
             const canvas = document.getElementById('ekg-canvas');
             const bpmText = document.getElementById('vitals-bpm-text');
 
@@ -165,21 +163,20 @@
 
             const centerY = canvas.height / 2;
 
-            // --- EKG Path Data ---
             // Format: [x, y_offset] (y+ is down, y- is up)
-            // UPDATED: Doubled all Y values to make it twice as high
+            // Double all Y values to make the graph twice as high
             const pathData = [
-                [0, 0],   // Start
-                [35, 0],  // Flatline
+                [0, 0],    // Start
+                [35, 0],   // Flatline
                 [38, -10], // P-wave (up) [was -5]
-                [40, 0],  // baseline
-                [42, 4],  // Q-wave (down) [was 2]
+                [40, 0],   // baseline
+                [42, 4],   // Q-wave (down) [was 2]
                 [45, -50], // R-wave (big up) [was -25]
-                [48, 6],  // S-wave (down) [was 3]
-                [50, 0],  // baseline
+                [48, 6],   // S-wave (down) [was 3]
+                [50, 0],   // baseline
                 [58, -16], // T-wave (up) [was -8]
-                [65, 0],  // baseline
-                [100, 0] // Flatline to end
+                [65, 0],   // baseline
+                [100, 0]   // Flatline to end
             ];
             const pathWidth = 100; // The total x-width of the pathData above
 
@@ -208,7 +205,7 @@
                 ctx.stroke();
             }
 
-            // --- The Animation Loop ---
+            // The Animation Loop
             function animate(timestamp) {
                 // Calculate time delta for smooth, consistent speed
                 if (!lastTimestamp) lastTimestamp = timestamp;
@@ -223,7 +220,7 @@
                     ctx.strokeStyle = 'var(--primary-color)';
                     ctx.lineWidth = 2;
 
-                    // --- Calculate Speed ---
+                    // Calculate Speed
                     // beatsPerSecond = currentBpm / 60
                     // pixelsPerSecond = pathWidth * beatsPerSecond
                     // pixelsToMove = pixelsPerSecond * deltaTime
@@ -255,7 +252,7 @@
                 requestAnimationFrame(animate);
             }
 
-            // --- Data Fetching ---
+            // Data Fetching
             let pulseInterval = null;
 
             function updatePulse() {
@@ -295,5 +292,4 @@
             requestAnimationFrame(animate); // Start the animation loop
         });
     </script>
-
 {% endblock %}

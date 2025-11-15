@@ -18,6 +18,7 @@ class CustomFormatter(logging.Formatter):
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
 
+# Create global logger instance
 logger = logging.getLogger('app')
 logger.setLevel(logging.DEBUG)
 

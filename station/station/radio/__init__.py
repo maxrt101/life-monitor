@@ -21,17 +21,20 @@ from .payload import (
 )
 
 from .net import Network
-
 from .driver import Driver
 
-def create_driver() -> Driver:
-    from station.config import CONFIG_RADIO_DRIVER, CONFIG_RADIO_SX1278_SPIDEV
+from station.utils import logger
+
+def create_driver(spidev: str) -> Driver:
+    from station.config import CONFIG_RADIO_DRIVER
 
     if CONFIG_RADIO_DRIVER == 'mock':
         from .driver.mock import MockDriver
+        logger.info('Initializing MOCK radio driver')
         return MockDriver()
     elif CONFIG_RADIO_DRIVER == 'sx1278':
         from .driver.sx1278 import SX1278Driver
-        return SX1278Driver(CONFIG_RADIO_SX1278_SPIDEV)
+        logger.info(f'Initializing SX1278 radio driver on {spidev}')
+        return SX1278Driver(spidev)
     else:
         raise ValueError(f'Invalid rf driver requested: {CONFIG_RADIO_DRIVER}')

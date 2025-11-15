@@ -1,6 +1,7 @@
 from enum import Enum
 
 
+# Encryption key size in bytes
 KEY_SIZE = 16
 
 

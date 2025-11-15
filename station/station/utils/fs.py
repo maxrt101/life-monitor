@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Any
 
+# Create path from list of strings and/or other paths
 def form_path(*args) -> Path:
     def normalize(p: Any) -> Path | str:
         match p:
