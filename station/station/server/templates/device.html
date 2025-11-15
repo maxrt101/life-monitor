@@ -168,14 +168,15 @@
             const pathData = [
                 [0, 0],    // Start
                 [35, 0],   // Flatline
-                [38, -10], // P-wave (up) [was -5]
-                [40, 0],   // baseline
-                [42, 4],   // Q-wave (down) [was 2]
-                [45, -50], // R-wave (big up) [was -25]
-                [48, 6],   // S-wave (down) [was 3]
+                [38, -12], // P-wave (up) (origin: -5)
+                [45, 0],   // baseline
                 [50, 0],   // baseline
-                [58, -16], // T-wave (up) [was -8]
-                [65, 0],   // baseline
+                [52, 8],   // Q-wave (down) (original 2)
+                [56, -75], // R-wave (big up) (original -25)
+                [65, 30],   // S-wave (down) (original 3)
+                [70, 0],   // baseline
+                [75, -14], // T-wave (up) (original -8)
+                [80, 0],   // baseline
                 [100, 0]   // Flatline to end
             ];
             const pathWidth = 100; // The total x-width of the pathData above
