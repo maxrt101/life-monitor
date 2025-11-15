@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, g
+from flask import Flask, render_template, send_from_directory, request, redirect, url_for, session, flash, jsonify, g
 from werkzeug.security import generate_password_hash, check_password_hash
 from station.radio import StatusFlags, AlertTrigger
 from station.utils import parse_int
@@ -6,7 +6,7 @@ from station import db, config
 import datetime
 
 
-app = Flask('LifeMonitorStation', template_folder='station/server/templates')
+app = Flask('LifeMonitorStation', template_folder='station/server/templates', static_folder='station/server/static')
 app.config['SECRET_KEY'] = config.CONFIG_APP_SESSION_KEY
 
 
@@ -85,6 +85,15 @@ def device_to_dict(device: db.Device, status: str, message: str) -> dict:
         'status':  status,
         'message': message
     }
+
+
+########## Static Content ##########
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(
+        app.static_folder, 'favicon.ico', mimetype='image/vnd.microsoft.icon'
+    )
 
 
 ########## Authentication ##########
