@@ -12,7 +12,7 @@
 
     <title>LifeMonitor Station</title>
     <style>
-        /* --- Base Overrides & Color Theme --- */
+        /* Base Overrides & Color Theme */
         body {
             background-color: #1a1a1a;
             --primary-color: #00C832;   /* Darker Green */
@@ -38,20 +38,44 @@
             margin-top: 20px;
             margin-bottom: 20px;
         }
-        /* --- End Theme --- */
 
-        .container { max-width: 1000px; }
-        .navbar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--primary-color); padding-bottom: 1rem; }
-        .status-OK { color: var(--success-color); }
-        .status-WARNING { color: var(--warning-color); }
-        .status-CRITICAL {
-            color: var(--error-color);
-            animation: pulse-red 1s infinite;
+
+        /* Other styles */
+        .container {
+            max-width: 1000px;
         }
-        @keyframes pulse-red {
-            0% { text-shadow: 0 0 5px var(--error-color); }
-            50% { text-shadow: 0 0 15px var(--error-color); }
-            100% { text-shadow: 0 0 5px var(--error-color); }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--primary-color);
+            padding-bottom: 1rem;
+        }
+
+
+        /* Status styles */
+        .status-OK {
+            color: var(--success-color);
+        }
+        .status-WARNING {
+            color: var(--warning-color);
+        }
+        .status-CRITICAL {
+            --bg-size: 400%;
+            --color-one: rgb(255, 10, 0);
+            --color-two: rgb(255, 190, 0);
+            background: linear-gradient(90deg, var(--color-one), var(--color-two), var(--color-one)) 0 0 / var(--bg-size) 100%;
+            color: transparent !important;
+            background-clip: text;
+            -webkit-background-clip: text;
+            animation: move-bg 8s infinite linear;
+        }
+
+        @keyframes move-bg {
+          to {
+            background-position: var(--bg-size) 0;
+          }
         }
 
         /* Vitals/EKG Graph Styles */
@@ -80,6 +104,7 @@
             height: 100%;
             background-color: #333;
         }
+
 
         /* Debug Menu Styles */
         #debug-toggle {
