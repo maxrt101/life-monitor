@@ -57,8 +57,10 @@ def get_device_status(device: int) -> (str, str):
         # 5. Check pulse
         if latest_status.bpm == 0:
             return 'CRITICAL', 'No Pulse Detected'
-        if latest_status.bpm < 40 or latest_status.bpm > 180:
+        if latest_status.bpm < 40 or latest_status.bpm > 190:
             return 'WARNING', f'Abnormal Pulse ({latest_status.bpm} BPM)'
+        if latest_status.bpm > 150:
+            return 'WARNING', f'High Pulse ({latest_status.bpm} BPM)'
 
         # If all checks pass:
         return 'OK', f'Nominal ({latest_status.bpm} BPM)'
