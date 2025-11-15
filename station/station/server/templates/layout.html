@@ -19,14 +19,16 @@
             --secondary-color: #8c8c8c;
             --tertiary-color: #6c6c6c;
 
-            --card-background: #018021b8;
-
             --success-color: #00C832;
             --warning-color: #FFBF00;
             --error-color: #FF4136;
 
             --font-color: #e0e0e0;
             --invert-font-color: #222225;
+
+            --card-background: #018021b8;
+            --map-location-dot-color: #2b81cc;
+            --map-line-color: #3cbf51;
 
             background-color: var(--background-color);
             color: var(--font-color);
@@ -244,7 +246,7 @@
     <footer>
         <div class="footer-container" style="border-top: 1px solid var(--secondary-color);">
             <div style="display: flex;">
-                <img src="/favicon.ico" alt="Icon" style="height: 1.5rem; width: 1.5rem; ">
+                <img src="{{ url_for('static', filename='favicon.ico') }}" alt="Icon" style="height: 1.5rem; width: 1.5rem; ">
                 <p style="padding-left: 0.5rem; display: block; margin: auto auto;">LifeMonitor Project </p>
             </div>
             <p style="display: block; margin: auto 0;">© maxrt 2025</p>

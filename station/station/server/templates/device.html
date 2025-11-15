@@ -117,14 +117,14 @@
                     const latLngs = locations.map(loc => [loc.lat, loc.lon]);
 
                     // Add the path
-                    const polyline = L.polyline(latLngs, { color: 'var(--error-color)' }).addTo(map);
+                    const polyline = L.polyline(latLngs, { color: 'var(--map-line-color)' }).addTo(map);
 
                     // Add a small circle for each location point
                     latLngs.forEach((latLng, index) => {
                         L.circleMarker(latLng, {
                             radius: 3,
-                            color: 'var(--primary-color)',
-                            fillColor: 'var(--primary-color)',
+                            color: 'var(--map-location-dot-color)',
+                            fillColor: 'var(--map-location-dot-color)',
                             fillOpacity: 0.8
                         }).addTo(map)
                           .bindPopup(`Point ${index + 1}<br>${new Date(locations[index].ts).toLocaleString()}`);
