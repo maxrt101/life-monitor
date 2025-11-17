@@ -26,7 +26,7 @@ Station is a RaspberryPi that uses LoRa to communicate with devices and save all
 Station application is located in `station` directory.  
 Station consists of radio network implementation & server (UI).  
 
-![Device Page (UI)](station/device.png)
+![Device Page (UI)](station/device_page.png)
 
 ### How to build device firmware
 #### Prerequisites
