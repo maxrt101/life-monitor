@@ -37,3 +37,17 @@ Station consists of radio network implementation & server (UI).
  - `git submodule update --init --recursive`  
  - `cmake -B build -S . -G "Unix Makefiles" --preset "LifeMonitor LM.MBR.1 Debug"`  
  - `cmake --build build --target LifeMonitor -j$(nproc)`  
+
+### How to run station application  
+#### Prerequisites  
+ - Python3 (at least 3.10)
+
+#### Steps  
+ - `git submodule update --init --recursive`  
+ - `cd station`
+ - `python3 -m venv .venv`  
+ - `. .venv/bin/activate`
+ - `pip3 install -r requirements.txt`
+ - If `/dev/spidevX.Y` is available, specify it in `config.py` (`CONFIG_RADIO_SX1278_SPIDEV` & set `CONFIG_RADIO_DRIVER=sx1278`)  
+ - If spidev is not available - use `CONFIG_RADIO_DRIVER=mock`
+ - `life-monitor-station` 
