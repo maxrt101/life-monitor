@@ -368,9 +368,13 @@ error_t app_gps_process(app_t * app) {
   }
 #endif
 
-  error_t err = gps_parse(&app->gps.last_location, app->gps.buffer, app->gps.index);;
+  error_t err = gps_parse(&app->gps.last_location, app->gps.buffer, app->gps.index);
 
   app->gps.index = 0;
+
+  if (err == E_OK) {
+    ERROR_CHECK_RETURN(app_send_location(app));
+  }
 
   return err;
 }

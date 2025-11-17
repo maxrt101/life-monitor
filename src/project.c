@@ -167,7 +167,7 @@ void project_main(void) {
     .reset_reason = os_get_reset_reason()
   });
 
-#if 1
+#if 0
   log_printf("Key:\r\n");
   hexdump(device.app.net.key, NET_KEY_SIZE);
 
