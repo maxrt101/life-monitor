@@ -547,6 +547,24 @@ class Script:
         self.index += 1
 
 
+    def __handle_bkpt(self, _cmd: list[str]):
+        self.index += 1
+        while True:
+            inp = input('> ')
+
+            if inp == 'resume':
+                return True
+
+            if inp == 'stop':
+                return False
+
+            commands = self.__split_into_tokens(inp)
+            commands = self.__process_escapes(commands)
+
+            for c in commands:
+                self.run_cmd(c)
+
+
     def cycle(self):
         if self.index >= len(self.commands):
             return False
@@ -573,6 +591,8 @@ class Script:
             case 'endif':
                 self.__handle_endif(cmd)
                 return True
+            case 'bkpt':
+                return self.__handle_bkpt(cmd)
 
         self.run_cmd(cmd)
         self.net.cycle()
