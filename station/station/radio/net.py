@@ -4,14 +4,22 @@ from .packet import Packet
 from .types import Command, TransportType
 from .driver import Driver
 from datetime import datetime, timedelta
+from enum import Enum
 
 
 class RegistrationContext:
+    class Stage(Enum):
+        NONE = 0
+        REG_REQUEST = 1
+        PING = 2
+
     def __init__(self, name: str = '', dev_mac: int = 0, duration: int = 0):
+        self.stage    = self.Stage.NONE
         self.name     = name
         self.dev_mac  = dev_mac
         self.duration = duration
         self.start    = datetime.now()
+        self.version  = '-.-.-.-'
 
     def in_progress(self) -> bool:
         # Consider registration invalid if dev_mac is 0 - which can only happen if
@@ -35,6 +43,7 @@ class Network:
     def start_registration(self, name: str, dev_mac: int):
         # Start the registration
         self.registration = RegistrationContext(name, dev_mac, config.CONFIG_REGISTRATION_DURATION)
+        self.registration.stage = RegistrationContext.Stage.REG_REQUEST
         logger.info(f'Starting registration for "{name}" (0x{dev_mac:X}) for {config.CONFIG_REGISTRATION_DURATION}s')
 
 
@@ -69,6 +78,22 @@ class Network:
         # PING must be confirmed
         self.__send_confirm(packet.header.origin, packet.key)
 
+        dev_mac = packet.header.origin
+
+        if self.registration.in_progress() and packet.header.origin == self.registration.dev_mac and self.registration.stage == RegistrationContext.Stage.PING:
+            # Save device into the DB, only if ping is received
+            db.Device.create(
+                mac=packet.header.origin,
+                name=self.registration.name,
+                version=self.registration.version
+            ).save()
+
+            logger.info(f'Registered 0x{dev_mac:X}')
+
+            # Reset registration
+            self.registration = RegistrationContext()
+
+
         logger.info(f'Received PING from 0x{packet.header.origin:X}')
 
 
@@ -88,6 +113,10 @@ class Network:
         # Ignore, if no registration is in progress (maybe it's meant for another station in radio range)
         if not self.registration.in_progress():
             logger.warning(f'Received registration from 0x{dev_mac:X}, but no registration is in progress, rejecting...')
+            return
+
+        if self.registration.stage != RegistrationContext.Stage.REG_REQUEST:
+            logger.warning(f'Wrong registration stage ({self.registration.stage})')
             return
 
         # Ignore, if registration MAC & device MAC are not matching (maybe another station has registration in progress in radio range)
@@ -119,25 +148,10 @@ class Network:
 
         self.driver.send(reg_data)
 
-        # Wait for ping
-        ping = self.__recv_packet(config.CONFIG_RADIO_PACKET_LISTEN_DURATION)
+        self.registration.stage = RegistrationContext.Stage.PING
+        self.registration.version = f'{packet.payload.hw_ver}.{packet.payload.sw_ver_major}.{packet.payload.sw_ver_minor}.{packet.payload.sw_ver_patch}'
 
-        if ping:
-            self.__handle_ping(ping)
-
-            # Save device into the DB, only if ping is received
-            db.Device.create(
-                mac=dev_mac,
-                name=self.registration.name,
-                version=f'{packet.payload.hw_ver}.{packet.payload.sw_ver_major}.{packet.payload.sw_ver_minor}.{packet.payload.sw_ver_patch}'
-            ).save()
-
-            logger.info(f'Registered 0x{dev_mac:X}')
-
-            # Reset registration
-            self.registration = RegistrationContext()
-        else:
-            logger.error(f'Failed to register 0x{dev_mac:X}, no response')
+        logger.info(f'Received registration request from 0x{dev_mac:X}')
 
 
     def __handle_status(self, packet: Packet):
@@ -155,7 +169,9 @@ class Network:
                 avg_bpm=packet.payload.avg_bpm,
                 device=dev
             ).save()
-            # STATUS shouldn't be confirmed
+
+            self.__send_confirm(packet.header.origin, packet.key)
+
             logger.info(f'Received STATUS from 0x{packet.header.origin:X}: {packet.payload}')
         except Exception as e:
             logger.error(f'Failed to save STATUS data from 0x{packet.header.origin:X}: {e}')
@@ -177,7 +193,9 @@ class Network:
                 longitude=float(packet.payload.long)/100,
                 device=dev
             ).save()
-            # LOCATION shouldn't be confirmed
+
+            self.__send_confirm(packet.header.origin, packet.key)
+
             logger.info(f'Received LOCATION from 0x{packet.header.origin:X}: {packet.payload}')
         except Exception as e:
             logger.error(f'Failed to save LOCATION data from 0x{packet.header.origin:X}: {e}')
@@ -196,7 +214,9 @@ class Network:
                 trigger=packet.payload.trigger.value,
                 device=dev
             ).save()
-            # ALERT shouldn't be confirmed
+
+            self.__send_confirm(packet.header.origin, packet.key)
+
             logger.info(f'Received ALERT from 0x{packet.header.origin:X}: {packet.payload}')
         except Exception as e:
             logger.error(f'Failed to save ALERT data from 0x{packet.header.origin:X}: {e}')
