@@ -118,7 +118,7 @@ def main():
         # Wait for the radio thread to finish its loop and close
         rf_thread.join()
 
-    logger.info("Shutdown complet.")
+    logger.info("Shutdown complete.")
 
 
 if __name__ == '__main__':
