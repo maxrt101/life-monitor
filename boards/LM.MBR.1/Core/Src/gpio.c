@@ -55,19 +55,19 @@ void MX_GPIO_Init(void)
   LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOD);
 
   /**/
-  LL_GPIO_SetOutputPin(LED1_GPIO_Port, LED1_Pin);
+  LL_GPIO_ResetOutputPin(LED1_GPIO_Port, LED1_Pin);
 
   /**/
-  LL_GPIO_SetOutputPin(LED2_GPIO_Port, LED2_Pin);
+  LL_GPIO_ResetOutputPin(LED2_GPIO_Port, LED2_Pin);
 
   /**/
-  LL_GPIO_SetOutputPin(LED3_GPIO_Port, LED3_Pin);
+  LL_GPIO_ResetOutputPin(LED3_GPIO_Port, LED3_Pin);
+
+  /**/
+  LL_GPIO_ResetOutputPin(TRX_RESET_GPIO_Port, TRX_RESET_Pin);
 
   /**/
   LL_GPIO_SetOutputPin(TRX_SPI_CS_GPIO_Port, TRX_SPI_CS_Pin);
-
-  /**/
-  LL_GPIO_SetOutputPin(TRX_RESET_GPIO_Port, TRX_RESET_Pin);
 
   /**/
   GPIO_InitStruct.Pin = LL_GPIO_PIN_13;
