@@ -193,20 +193,6 @@ class Script:
                     val = value.split(',')
                 return [utils.parse_int(x) for x in val]
             case 'dict':
-                # print(value)
-                #
-                # val = []
-                #
-                # if type(value) is list:
-                #     for i in range(len(value)):
-                #         if not self.__is_expr(value[i]) and ',' in value[i]:
-                #             val.extend(value[i].split(','))
-                # else:
-                #     if not self.__is_expr(value) and ',' in value:
-                #         val = value.split(',')
-                #
-                # print(value)
-
                 if not self.__is_expr(value) and ',' in value:
                     value = value.split(',')
 

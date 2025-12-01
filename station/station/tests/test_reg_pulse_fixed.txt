@@ -1,0 +1,21 @@
+
+device new test mac=0xBAADC0DE name=Test ver=1.0.1.2
+
+station reg test
+
+device test send REGISTER target=0 transport=2 hw_ver=1 sw_ver_major=1 sw_ver_minor=4 sw_ver_patch=2
+device test recv REGISTRATION_DATA
+device test set-key {packet.net_key}
+device test set-station-mac {packet.station_mac}
+device test send PING
+device test recv CONFIRM
+
+station check test
+
+set BPM int 104
+
+loop
+    device test send STATUS bpm={BPM} avg_bpm={BPM}
+    device test recv CONFIRM
+    wait 2500
+endloop

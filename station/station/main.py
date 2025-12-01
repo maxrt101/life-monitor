@@ -1,4 +1,4 @@
-from station import config, server, radio, db, tests
+from station import config, server, radio, db, tests, script
 from station.utils import logger
 import threading
 import argparse
@@ -29,7 +29,7 @@ def server_thread(port: int):
         logger.info("Flask server shutting down")
 
 
-def radio_thread(spidev: str):
+def radio_thread(spidev: str, file: str):
     logger.info("Starting Radio network thread...")
 
     try:
@@ -38,6 +38,12 @@ def radio_thread(spidev: str):
 
         net = radio.Network(radio.create_driver(spidev), config.CONFIG_RADIO_KEY, config.CONFIG_RADIO_DEFAULT_KEY)
         logger.info("Radio network initialized")
+
+        script_ctx = script.Script(net)
+
+        if file:
+            with open(file, 'r') as f:
+                script_ctx.load(f.read())
 
         # Loop until the main thread signals shutdown
         while not shutdown_event.is_set():
@@ -54,7 +60,10 @@ def radio_thread(spidev: str):
             except Exception as e:
                 logger.error(f"Radio command processing error: {e}")
 
-            net.cycle()
+            if file:
+                script_ctx.cycle()
+            else:
+                net.cycle()
 
             # Use the event's wait() method instead of sleep()
             # This waits for timeout OR until the event is set
@@ -77,6 +86,7 @@ def main():
     parser.add_argument('-p', '--port', type=int, help='Server port', dest='port', default=8086)
     parser.add_argument('-s', '--spidev', type=str, help='SPI Dev path', dest='spidev', default=config.CONFIG_RADIO_SX1278_SPIDEV)
     parser.add_argument('-t', '--tests', action='store_true', help='Run tests', dest='tests', default=False)
+    parser.add_argument('-f', '--file', type=str, help='Test script', dest='script', default=None)
 
     args = parser.parse_args()
 
@@ -94,7 +104,7 @@ def main():
 
     # The radio thread is NOT a daemon, because it should
     # shut down gracefully and close its database connection
-    rf_thread = threading.Thread(target=radio_thread, args=(args.spidev, ))
+    rf_thread = threading.Thread(target=radio_thread, args=(args.spidev, args.script, ))
 
     logger.info("Starting services...")
 

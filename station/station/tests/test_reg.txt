@@ -1,0 +1,13 @@
+
+device new test mac=0xBAADC0DE name=Test ver=1.0.1.2
+
+station reg test
+
+device test send REGISTER target=0 transport=2
+device test recv REGISTRATION_DATA
+device test set-key {packet.net_key}
+device test set-station-mac {packet.station_mac}
+device test send PING
+device test recv CONFIRM
+
+station check test
