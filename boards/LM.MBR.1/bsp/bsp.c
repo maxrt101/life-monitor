@@ -113,7 +113,7 @@ error_t bsp_init_vfs_files(vfs_t * vfs) {
 }
 
 bool bsp_is_btn_pressed(void) {
-  return btn_was_pressed(&device.board.btns[BSP_BTN_MAIN]);
+  return gpio_ctx_read(&device.board.btns[BSP_BTN_MAIN].gpio);
 }
 
 void bsp_set_next_wakeup(milliseconds_t period) {

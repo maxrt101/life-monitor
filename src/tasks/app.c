@@ -25,7 +25,10 @@ void app_task_fn(__UNUSED void * ctx) {
   os_yield();
 
   if (bsp_is_btn_pressed()) {
+    app_start(&device.app);
+#if !DEBUG
     app_register(&device.app);
+#endif
   }
 
   os_yield();
